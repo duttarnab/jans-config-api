@@ -1,16 +1,10 @@
 package io.jans.configapi.service;
 
-import io.jans.as.model.config.WebKeysConfiguration;
 import io.jans.as.model.configuration.AppConfiguration;
 import io.jans.as.model.crypto.AuthCryptoProvider;
 import io.jans.as.model.crypto.signature.AlgorithmFamily;
 import io.jans.as.model.crypto.signature.SignatureAlgorithm;
-import io.jans.as.model.exception.InvalidJwtException;
 import io.jans.as.model.jwk.JSONWebKey;
-import io.jans.as.model.jwk.JSONWebKeySet;
-import io.jans.as.model.jwt.Jwt;
-import io.jans.as.model.jwt.JwtClaimName;
-import io.jans.as.model.jwt.JwtHeaderName;
 import io.jans.as.model.jwk.Algorithm;
 
 import java.security.KeyPair;
@@ -22,13 +16,11 @@ import java.security.cert.X509Certificate;
 import java.security.spec.ECGenParameterSpec;
 import java.util.GregorianCalendar;
 import java.util.TimeZone;
-
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.ws.rs.WebApplicationException;
 
 import org.bouncycastle.cert.CertIOException;
-import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.slf4j.Logger;
 
@@ -55,45 +47,33 @@ public class KeyStoreService {
                 throw new WebApplicationException(" No Key to import! ");
             }
             
+            log.debug("\n\n KeyStoreService::importKey() - jsonWebKey.toJSONObject().toString() = " + jsonWebKey.toJSONObject().toString());
+            
             //Get keyStore details
             AppConfiguration appConfiguration = this.getAppConfiguration();
-            log.debug("\n\n KeyStoreService::importKey() - appConfiguration = " + appConfiguration);
             String keyStoreFile = appConfiguration.getKeyStoreFile();
-            String keyStoreSecret = appConfiguration.getKeyStoreSecret();
+            String keyStoreSecret = appConfiguration.getKeyStoreSecret();            
             log.debug("\n\n KeyStoreService::importKey() - keyStoreFile = " + keyStoreFile + " , keyStoreSecret = "
-                    + keyStoreSecret);
-
-            //For local testing - TBD
-            keyStoreFile = "D:\\1.PUJA\\8.PUJA_WORK_EXP\\3.COMPANY\\9.GLUU\\4.SERVER_FILES\\pujavs.jans.server2\\opt\\gluu-server\\etc\\certs\\jans-auth-keys.jks";
-            log.debug("\n\n KeyStoreService::importKey() - 2 - keyStoreFile = " + keyStoreFile + " , keyStoreSecret = "
                     + keyStoreSecret);
 
             //Get CryptoProvider
             AuthCryptoProvider cryptoProvider = new AuthCryptoProvider(keyStoreFile, keyStoreSecret,dnName);                    
             log.debug("\n\n KeyStoreService::importKey() - cryptoProvider = " + cryptoProvider);
 
-            //Get keyss
+            //Get keys
             log.debug("\n\n KeyStoreService::importKey() - cryptoProvider.getKeys() =" + cryptoProvider.getKeys());
 
        
             //Verify if the store already has the key 
-            log.debug("\n\n KeyStoreService::importKey() - jsonWebKey.getKid() =" + jsonWebKey.getKid());
-            boolean conatinsKeys = cryptoProvider.getKeyStore().containsAlias(jsonWebKey.getKid());
-            log.debug("\n\n KeyStoreService::importKey() - conatinsKeys =" + conatinsKeys);
-            log.debug("\n\n KeyStoreService::importKey() - cryptoProvider.containsKey(jsonWebKey.getKid()) ="
-                    + cryptoProvider.containsKey(jsonWebKey.getKid()));
-
-            // For testing -- Delete later Start - TBD
-            boolean deleteKeyStatus = cryptoProvider.deleteKey(jsonWebKey.getKid());
-            log.debug("\n\n KeyStoreService::importKey() - jsonWebKey.getKid() =" + jsonWebKey.getKid()
-                    + " , deleteKeyStatus = " + deleteKeyStatus);
-            conatinsKeys = cryptoProvider.getKeyStore().containsAlias(jsonWebKey.getKid());
-            log.debug("\n\n KeyStoreService::importKey() - conatinsKeys 2 =" + conatinsKeys);
-            // For testing -- Delete later - End - TBD
-
+            boolean keyExistsInStore = cryptoProvider.getKeyStore().containsAlias(jsonWebKey.getKid());
+            log.debug("\n\n KeyStoreService::importKey() - jsonWebKey.getKid() = " + jsonWebKey.getKid()+" , keyExistsInStore =" + keyExistsInStore);
+            
+           
             log.debug("\n\n KeyStoreService::importKey() - jjsonWebKey.getAlg() =" + jsonWebKey.getAlg()
                     + " , jsonWebKey.toJSONObject().toString() = " + jsonWebKey.toJSONObject().toString());
-            if (!conatinsKeys) {
+            
+            //Import key if store does not have key
+            if (!keyExistsInStore) {
                 
                 //Generate private Key
                 KeyPair keyPair = this.getPrivateKey(jsonWebKey.getAlg());
@@ -103,13 +83,12 @@ public class KeyStoreService {
                 //import key
                 cryptoProvider.getKeyStore().setKeyEntry(jsonWebKey.getKid(), privateKey,
                         keyStoreSecret.toCharArray(), this.getX509CertificateChain(keyPair, dnName, jsonWebKey.getAlg(), this.getKeyExpirationTime(), cryptoProvider));
-                // cryptoProvider.getKeyStore().setKeyEntry(jsonWebKey.getKid(),
-                // jsonWebKey.toJSONObject().toString().getBytes(), null);
+
             }
             
             //Verify if key successfully imported 
-            conatinsKeys = cryptoProvider.getKeyStore().containsAlias(jsonWebKey.getKid());
-            log.debug("\n\n KeyStoreService::importKey() - conatinsKeys 3 =" + conatinsKeys);
+            keyExistsInStore = cryptoProvider.getKeyStore().containsAlias(jsonWebKey.getKid());
+            log.debug("\n\n KeyStoreService::importKey() - keyExistsInStore 3 =" + keyExistsInStore);
             
 
         } catch (Exception exp) {
@@ -142,7 +121,6 @@ public class KeyStoreService {
 
         // Generate the key
         KeyPair keyPair = keyGen.generateKeyPair();
-       // PrivateKey privateKey = keyPair.getPrivate();
 
         log.debug("\n\n KeyStoreService::getPrivateKey() - keyPair = " + keyPair);
         return keyPair;
@@ -157,7 +135,7 @@ public class KeyStoreService {
                 + dnName+" , algorithm = "+algorithm+" , cryptoProvider = "+cryptoProvider);
 
         SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.fromString(algorithm.getParamName());
-        log.debug("\n\n KeyStoreService::getX509CertificateChain() - algorithm = " + algorithm + " , signatureAlgorithm = "
+        log.trace("\n\n KeyStoreService::getX509CertificateChain() - algorithm = " + algorithm + " , signatureAlgorithm = "
                 + signatureAlgorithm);
         // Java API requires a certificate chain
         X509Certificate cert = cryptoProvider.generateV3Certificate(keyPair, dnName, signatureAlgorithm.getAlgorithm(),
