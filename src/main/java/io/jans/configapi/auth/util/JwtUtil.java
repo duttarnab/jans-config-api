@@ -64,8 +64,7 @@ public class JwtUtil {
     }
 
     public void validateToken(String token, List<String> resourceScopes) throws InvalidJwtException, Exception {
-        System.out
-                .println("JwtUtil::validateToken() - token = " + token + " , resourceScopes =" + resourceScopes + "\n");
+        log.debug("JwtUtil::validateToken() - token = " + token + " , resourceScopes =" + resourceScopes + "\n");
         // 1. Parse Jwt token
         // 2. Validate Token
         // 3. Validate Issuer

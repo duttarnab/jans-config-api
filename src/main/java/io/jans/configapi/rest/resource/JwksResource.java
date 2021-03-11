@@ -12,7 +12,7 @@ import io.jans.as.model.config.WebKeysConfiguration;
 import io.jans.as.model.jwk.JSONWebKey;
 import io.jans.configapi.filters.ProtectedApi;
 import io.jans.configapi.service.ConfigurationService;
-import io.jans.configapi.service.KeystoreService;
+import io.jans.configapi.service.KeyStoreService;
 import io.jans.configapi.util.ApiAccessConstants;
 import io.jans.configapi.util.ApiConstants;
 import io.jans.configapi.util.Jackson;
@@ -40,7 +40,7 @@ public class JwksResource extends BaseResource {
     ConfigurationService configurationService;
     
     @Inject
-    KeystoreService keystoreService;
+    KeyStoreService keyStoreService;
     
     @GET
     @ProtectedApi(scopes = { ApiAccessConstants.JWKS_READ_ACCESS })
@@ -76,11 +76,12 @@ public class JwksResource extends BaseResource {
     
     @POST
     @ProtectedApi(scopes = { ApiAccessConstants.JWKS_WRITE_ACCESS })
-    public Response postKey(JSONWebKey jsonWebKey) throws Exception {
-        System.out.println("JwksResource::postKey() - JWKS details to be updated - webkeys = "+jsonWebKey);
-        log.debug("JwksResource::postKey() - JWKS details to be updated - webkeys = "+jsonWebKey);
-        //keystoreService.importKey(webkeys.getKeys().get(0));
-        keystoreService.importKey(jsonWebKey);
+    //public Response postKey(JSONWebKey jsonWebKey) throws Exception {
+    public Response postKey(WebKeysConfiguration webkeys) throws Exception {
+        System.out.println("JwksResource::postKey() - JWKS details to be updated - webkeys = "+webkeys);
+        log.debug("JwksResource::postKey() - JWKS details to be updated - webkeys = "+webkeys);
+        keyStoreService.importKey(webkeys.getKeys().get(0));
+        //keystoreService.importKey(jsonWebKey);
         return Response.ok(Response.Status.OK).build();
     }
         
