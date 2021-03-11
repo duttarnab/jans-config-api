@@ -1,4 +1,4 @@
-@ignore
+
 Feature: JWKS endpoint
 
 	Background:
@@ -11,7 +11,18 @@ Feature: JWKS endpoint
     Then status 200
     And print response
     And assert response.length != null
+    
 
+  Scenario: Import JWKS
+    Given url  mainUrl
+    And header Authorization = 'Bearer ' + accessToken
+    And request read('jwk-post.json')
+    When method POST
+    Then status 200
+    And print response
+    And assert response.length != null
+
+@ignore
    Scenario: Patch JWKS with new key
     Given url  mainUrl
     And header Authorization = 'Bearer ' + accessToken
@@ -30,6 +41,7 @@ Feature: JWKS endpoint
     Then status 200
     And print response
 
+@ignore
   Scenario: Put JWKS
     Given url  mainUrl
     And header Authorization = 'Bearer ' + accessToken
