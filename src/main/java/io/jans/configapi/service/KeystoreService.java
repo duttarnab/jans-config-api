@@ -2,7 +2,6 @@ package io.jans.configapi.service;
 
 import io.jans.as.model.config.WebKeysConfiguration;
 import io.jans.as.model.configuration.AppConfiguration;
-import io.jans.as.model.crypto.AbstractCryptoProvider;
 import io.jans.as.model.crypto.AuthCryptoProvider;
 import io.jans.as.model.jwk.JSONWebKey;
 import io.jans.as.model.jwk.JSONWebKeySet;
@@ -10,7 +9,6 @@ import io.jans.as.model.jwk.JSONWebKeySet;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
 
 import org.slf4j.Logger;
 
@@ -56,7 +54,7 @@ public class KeystoreService {
             
 
             log.debug("\n\n KeystoreService::importKey() - jsonWebKey.getKid() =" + jsonWebKey.getKid());
-            boolean conatinsKeys = cryptoProvider.getKeyStore().containsAlias(jsonWebKey.getKid());sss
+            boolean conatinsKeys = cryptoProvider.getKeyStore().containsAlias(jsonWebKey.getKid());
             log.debug("\n\n KeystoreService::importKey() - conatinsKeys =" + conatinsKeys);
 
             log.debug("\n\n KeystoreService::importKey() - cryptoProvider.containsKey(jsonWebKey.getKid()) =" + cryptoProvider.containsKey(jsonWebKey.getKid()));
