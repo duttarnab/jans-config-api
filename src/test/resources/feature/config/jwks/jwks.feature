@@ -15,6 +15,17 @@ Feature: JWKS endpoint
   Scenario: Post JWKS
     Given url  mainUrl
     And header Authorization = 'Bearer ' + accessToken
+    And request read('csr.json')
+    And print request
+    When method POST
+    Then status 200
+    And print response
+    And assert response.length != null
+    
+  @ignore  
+    Scenario: Post JWKS
+    Given url  mainUrl
+    And header Authorization = 'Bearer ' + accessToken
     When method GET
     Then status 200
     Then print response

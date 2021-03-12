@@ -1425,17 +1425,22 @@ paths:
     post:
       tags:
         - Configuration – JWK - JSON Web Key (JWK)
-      summary: Imports JSON Web Keys (JWK) to keystore
+      summary: Imports key to keystore and persists it in auth serves JSON Web Key Set (JWKS)
       description: Imports JSON Web Keys (JWK) to keystore
-      operationId: post-config-jwks
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/JsonWebKey' 
+      operationId: post-config-key
+      parameters:
+        - schema:
+            type: string
+          in: query
+          name: publicKey
+          description: Public key to be imported.
       responses:
         '200':
           description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonWebKey' 
         '401':
           $ref: '#/components/responses/Unauthorized'
         '500':
