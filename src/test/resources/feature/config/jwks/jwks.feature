@@ -1,4 +1,4 @@
-
+@ignore
 Feature: JWKS endpoint
 
 	Background:

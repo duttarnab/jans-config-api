@@ -120,7 +120,7 @@ public class JwksResource extends BaseResource {
          * log.debug("JwksResource::postKey() - existing Json Web Keys - webKeys = "
          * +webKeys); List<JSONWebKey> jsonWebKeyList = webKeys.getKeys(); log.
          * debug("JwksResource::postKey() - existing Json Web Keys - jsonWebKeyList = "
-         * +jsonWebKeyList); boolean status = jsonWebKeyList.add(jsonWebKey);
+         * +jsonWebKeyList); boolean status = s.add(jsonWebKey);
          * log.debug("JwksResource::postKey() - existing Json Web Keys - status = "
          * +status); webKeys.setKeys(jsonWebKeyList); conf.setWebKeys(webKeys);
          * configurationService.merge(conf); final String json =
