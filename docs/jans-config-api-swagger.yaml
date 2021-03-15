@@ -1428,12 +1428,26 @@ paths:
       summary: Imports key to keystore and persists it in auth serves JSON Web Key Set (JWKS)
       description: Imports JSON Web Keys (JWK) to keystore
       operationId: post-config-key
-      parameters:
-        - schema:
-            type: string
-          in: query
-          name: publicKey
-          description: Public key to be imported.
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+                - format
+                - certificate
+              properties:
+                format:
+                  type: string
+                  description: Signing certificates format
+                  enum:
+                  - PEM
+                  - DER
+                certificate:
+                  type: string
+                  description: Public certificates in the prescribed format.
+			  
       responses:
         '200':
           description: OK

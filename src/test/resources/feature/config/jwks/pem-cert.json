@@ -1,4 +1,5 @@
 {
+  "format" : "pem",
   "clientCertificate" : "-----BEGIN CERTIFICATE-----
             MIIBBjCBrAIBAjAKBggqhkjOPQQDAjAPMQ0wCwYDVQQDDARtdGxzMB4XDTE4MTAx
             ODEyMzcwOVoXDTIyMDUwMjEyMzcwOVowDzENMAsGA1UEAwwEbXRsczBZMBMGByqG

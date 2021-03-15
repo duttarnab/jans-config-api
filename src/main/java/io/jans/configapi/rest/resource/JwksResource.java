@@ -12,6 +12,7 @@ import io.jans.as.model.config.WebKeysConfiguration;
 import io.jans.as.model.jwk.JSONWebKeySet;
 import io.jans.as.model.jwk.JSONWebKey;
 import io.jans.configapi.filters.ProtectedApi;
+import io.jans.configapi.rest.model.ClientCertificate;
 import io.jans.configapi.service.ConfigurationService;
 import io.jans.configapi.service.KeyStoreService;
 import io.jans.configapi.service.TestKeyGenerator;
@@ -20,6 +21,8 @@ import io.jans.configapi.util.ApiConstants;
 import io.jans.configapi.util.Jackson;
 
 import javax.inject.Inject;
+import javax.validation.Valid;
+import javax.validation.constraints.NotBlank;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -106,27 +109,13 @@ public class JwksResource extends BaseResource {
 
     @POST
     @ProtectedApi(scopes = { ApiAccessConstants.JWKS_WRITE_ACCESS })
-    public Response postKey(String key) throws Exception {
-        System.out.println("JwksResource::postKey() - Json WEb Key to be imported - key = " + key);
-        log.debug("JwksResource::postKey() - Json WEb Key to be imported - key = " + key);
-        keyStoreService.importKey(testKeyGenerator.getPublicKey());
+    //public Response postKey(@Valid ClientCertificate clientCertificate) throws Exception {
+    //public Response postKey(@NotBlank String format,@NotBlank String clientCertificate) throws Exception {
+    public Response postKey(@NotBlank String format, String clientCertificate) throws Exception {
+        System.out.println("JwksResource::postKey() - Json WEb Key to be imported - format = "+format+" , clientCertificate ="+clientCertificate);
+        keyStoreService.importKey(format, clientCertificate);
         return Response.ok(Response.Status.OK).build();
-        /*
-         * //Update add new key to JWKS stored in jansConfWebKeys String jansConfWebKeys
-         * = configurationService.findConf().getWebKeys().toString(); log.
-         * debug("JwksResource::postKey() - existing Json Web Keys - jansConfWebKeys = "
-         * +jansConfWebKeys); final Conf conf = configurationService.findConf();
-         * WebKeysConfiguration webKeys = conf.getWebKeys();
-         * log.debug("JwksResource::postKey() - existing Json Web Keys - webKeys = "
-         * +webKeys); List<JSONWebKey> jsonWebKeyList = webKeys.getKeys(); log.
-         * debug("JwksResource::postKey() - existing Json Web Keys - jsonWebKeyList = "
-         * +jsonWebKeyList); boolean status = s.add(jsonWebKey);
-         * log.debug("JwksResource::postKey() - existing Json Web Keys - status = "
-         * +status); webKeys.setKeys(jsonWebKeyList); conf.setWebKeys(webKeys);
-         * configurationService.merge(conf); final String json =
-         * configurationService.findConf().getWebKeys().toString(); return
-         * Response.ok(json).build();
-         */
+       
     }
 
 }

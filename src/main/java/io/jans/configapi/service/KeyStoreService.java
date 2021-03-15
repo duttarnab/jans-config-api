@@ -52,11 +52,11 @@ public class KeyStoreService {
         return appConfiguration;
     }
 
-    public void importKey(PublicKey publicKey) throws Exception {
+    public void importKey(String certFormat,String certPem) throws Exception {
         try {
-            log.debug("\n\n KeyStoreService::importKey() - publicKey.getAlgorithm() = " + publicKey.getAlgorithm()
-                    + " , publicKey.getFormat() = " + publicKey.getFormat());
-            if (publicKey == null) {
+            log.debug("\n\n KeyStoreService::importKey() - certFormat = " + certFormat
+                    + " , certPem = " + certPem);
+            if (certFormat == null || certPem == null) {
                 throw new WebApplicationException(" CSR PEM is null! ");
             }
 
@@ -78,16 +78,16 @@ public class KeyStoreService {
             // Get keys
             log.debug("\n\n KeyStoreService::importKey() - cryptoProvider.getKeys() =" + cryptoProvider.getKeys());
 
-            // Import key if store does not have key
+           
+            //Get Certificate from PEM
+            X509Certificate cert = this.x509CertificateFromPem(certPem);
+            
+            log.debug("\n\n KeyStoreService::importKey() - cert =" + cert);
+            PublicKey publicKey = cert.getPublicKey();
+            byte[] encodedKey = publicKey.getEncoded();
+            log.debug("\n\n KeyStoreService::importKey() - publicKey =" + publicKey+" , encodedKey = "+encodedKey);
 
-            log.debug("\n\n KeyStoreService::importKey() - publicKey.getAlgorithm() =" + publicKey.getAlgorithm());
 
-            // Generate private Key
-            // KeyPair keyPair = this.getPrivateKey(publicKey.getAlgorithm());
-            // PrivateKey privateKey = keyPair.getPrivate();
-            // log.debug("\n\n KeyStoreService::importKey() - privateKey =" + privateKey);
-
-            // Certificate
             X509Certificate[] certChain = this.getX509CertificateChain(publicKey, dnName, this.getKeyExpirationTime(),
                     cryptoProvider);
 
@@ -95,14 +95,12 @@ public class KeyStoreService {
             String alias = UUID.randomUUID().toString()
                     + getKidSuffix(Use.SIGNATURE.getParamName(), publicKey.getAlgorithm());
             log.debug("\n\n KeyStoreService::importKey() - alias = " + alias);
-            boolean keyExistsInStore = cryptoProvider.getKeyStore().containsAlias(alias);
-            log.debug("\n\n KeyStoreService::importKey() - keyExistsInStore 3 =" + keyExistsInStore);
-
+            
             // import key
             cryptoProvider.getKeyStore().setKeyEntry(alias, publicKey, keyStoreSecret.toCharArray(), certChain);
 
             // Verify if key successfully imported
-            keyExistsInStore = cryptoProvider.getKeyStore().containsAlias(alias);
+           boolean keyExistsInStore = cryptoProvider.getKeyStore().containsAlias(alias);
             log.debug("\n\n KeyStoreService::importKey() - keyExistsInStore 3 =" + keyExistsInStore);
         } catch (Exception exp) {
             exp.printStackTrace();
