@@ -11,7 +11,7 @@ public class ClientCertificate implements Serializable {
     private String format;
     
     @NotBlank
-    private String certificate;
+    private String content;
     
     
     public String getFormat() {
@@ -20,11 +20,11 @@ public class ClientCertificate implements Serializable {
     public void setFormat(String format) {
         this.format = format;
     }
-    public String getCertificate() {
-        return certificate;
+    public String getContent() {
+        return content;
     }
-    public void setCertificate(String certificate) {
-        this.certificate = certificate;
+    public void setContent(String content) {
+        this.content = content;
     }
     
     
@@ -33,7 +33,7 @@ public class ClientCertificate implements Serializable {
         return "ClientCertificate "
                 + "["
                 +" format=" + format 
-                + ", certificate=" + certificate
+                + ", content=" + content
                 + "]";
     }
     

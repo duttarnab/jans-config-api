@@ -111,9 +111,9 @@ public class JwksResource extends BaseResource {
     @ProtectedApi(scopes = { ApiAccessConstants.JWKS_WRITE_ACCESS })
     //public Response postKey(@Valid ClientCertificate clientCertificate) throws Exception {
     //public Response postKey(@NotBlank String format,@NotBlank String clientCertificate) throws Exception {
-    public Response postKey(@NotBlank String format, String clientCertificate) throws Exception {
-        System.out.println("JwksResource::postKey() - Json WEb Key to be imported - format = "+format+" , clientCertificate ="+clientCertificate);
-        keyStoreService.importKey(format, clientCertificate);
+    public Response postKey(@Valid ClientCertificate clientCertificate) throws Exception {
+        System.out.println("JwksResource::postKey() - Json WEb Key to be imported - clientCertificate ="+clientCertificate);
+        keyStoreService.importKey(clientCertificate);
         return Response.ok(Response.Status.OK).build();
        
     }

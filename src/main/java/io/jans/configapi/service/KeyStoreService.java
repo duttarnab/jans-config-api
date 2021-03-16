@@ -1,27 +1,32 @@
 package io.jans.configapi.service;
 
-import io.jans.as.model.configuration.AppConfiguration;
+import io.jans.as.model.crypto.AbstractCryptoProvider;
 import io.jans.as.model.crypto.AuthCryptoProvider;
-import io.jans.as.model.crypto.signature.AlgorithmFamily;
+import io.jans.as.model.crypto.ElevenCryptoProvider;
+import io.jans.as.model.crypto.encryption.KeyEncryptionAlgorithm;
 import io.jans.as.model.crypto.signature.SignatureAlgorithm;
+import io.jans.as.model.configuration.AppConfiguration;
+import io.jans.as.model.crypto.signature.AlgorithmFamily;
+import io.jans.as.model.jwk.KeyType;
 import io.jans.as.model.jwk.JSONWebKey;
+import io.jans.as.model.jwk.JSONWebKeySet;
 import io.jans.as.model.jwk.Algorithm;
 import io.jans.as.model.jwk.Use;
-import io.jans.as.model.util.Base64Util;
+import io.jans.configapi.rest.model.ClientCertificate;
+
+import static io.jans.as.model.jwk.JWKParameter.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.security.Key;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
-import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.cert.CertificateException;
-import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.spec.ECGenParameterSpec;
+import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.TimeZone;
@@ -34,6 +39,9 @@ import org.apache.commons.lang.StringUtils;
 import org.bouncycastle.cert.CertIOException;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.util.encoders.Base64;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 
 @ApplicationScoped
@@ -46,20 +54,48 @@ public class KeyStoreService {
 
     @Inject
     ConfigurationService configurationService;
+    
+    final String content = "-----BEGIN PUBLIC KEY-----\n" +
+            "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4LZF1PaIS1lNjWPC8WK6\n" +
+            "Hxl0NaQE7tY6Ixe8VB9THGBAnjc/6AgPlaLuz3Sy+j/A+JnimvdYyJLHlPxxvU3a\n" +
+            "3MTId2FnkB1v0nfMTIZRwuwcKD8mrftoRjlzetG1zSCg7XGi+xTIyH54pgkdjjnA\n" +
+            "CBAVgDwIrxfcUqpdaCyjNAS/Hn2DmFq8PJTs6QQyI5HHMxj2uNGeFC4KfFqZGjw0\n" +
+            "8rI6mbPsZULeFmfMFNtHFbMt9JMMO6921Y/2BwwbLKPSGnqShWcWSxffLBIs0rBO\n" +
+            "KkWFbvCmfmhmLvgfhuZtU4diBnMfPFX3tQy0MUPyqQnwGa+sb0S4NdxgeROs6b8r\n" +
+            "owIDAQAB\n" +
+            "-----END PUBLIC KEY-----";
+    
+    public static final String TEST_PEM_1 = "-----BEGIN CERTIFICATE-----\n" +
+            "MIIBBjCBrAIBAjAKBggqhkjOPQQDAjAPMQ0wCwYDVQQDDARtdGxzMB4XDTE4MTAx\n" +
+            "ODEyMzcwOVoXDTIyMDUwMjEyMzcwOVowDzENMAsGA1UEAwwEbXRsczBZMBMGByqG\n" +
+            "SM49AgEGCCqGSM49AwEHA0IABNcnyxwqV6hY8QnhxxzFQ03C7HKW9OylMbnQZjjJ\n" +
+            "/Au08/coZwxS7LfA4vOLS9WuneIXhbGGWvsDSb0tH6IxLm8wCgYIKoZIzj0EAwID\n" +
+            "SQAwRgIhAP0RC1E+vwJD/D1AGHGzuri+hlV/PpQEKTWUVeORWz83AiEA5x2eXZOV\n" +
+            "bUlJSGQgjwD5vaUaKlLR50Q2DmFfQj1L+SY=\n" +
+            "-----END CERTIFICATE-----";
+
 
     private AppConfiguration getAppConfiguration() {
         AppConfiguration appConfiguration = configurationService.find();
         return appConfiguration;
     }
 
-    public void importKey(String certFormat,String certPem) throws Exception {
+    public void importKey(ClientCertificate clientCertificate) throws Exception {
         try {
-            log.debug("\n\n KeyStoreService::importKey() - certFormat = " + certFormat
-                    + " , certPem = " + certPem);
-            if (certFormat == null || certPem == null) {
+            log.debug("\n\n KeyStoreService::importKey() - clientCertificate = "+clientCertificate);
+            String format = clientCertificate.getFormat();
+            String certContent = clientCertificate.getContent();
+           
+            log.debug("\n\n KeyStoreService::importKey() - format = " + format +" , certContent = " + certContent);
+            if (format == null || certContent == null) {
                 throw new WebApplicationException(" CSR PEM is null! ");
             }
 
+            //For testing - TBD - Start
+            certContent = TEST_PEM_1;
+            log.debug("\n\n KeyStoreService::importKey() - format  = " + format +" , certContent = " + certContent);
+            //For testing - TBD - End - 
+            
             // Get keyStore details
             AppConfiguration appConfiguration = this.getAppConfiguration();
             String keyStoreFile = appConfiguration.getKeyStoreFile();
@@ -80,7 +116,7 @@ public class KeyStoreService {
 
            
             //Get Certificate from PEM
-            X509Certificate cert = this.x509CertificateFromPem(certPem);
+            X509Certificate cert = this.x509CertificateFromPem(certContent);
             
             log.debug("\n\n KeyStoreService::importKey() - cert =" + cert);
             PublicKey publicKey = cert.getPublicKey();
@@ -98,6 +134,10 @@ public class KeyStoreService {
             
             // import key
             cryptoProvider.getKeyStore().setKeyEntry(alias, publicKey, keyStoreSecret.toCharArray(), certChain);
+            
+            //Generate Jwks
+           // this.generateKeys(cryptoProvider, List<Algorithm> signatureAlgorithms,
+             //       List<Algorithm> encryptionAlgorithms, int expiration, int expirationHours)
 
             // Verify if key successfully imported
            boolean keyExistsInStore = cryptoProvider.getKeyStore().containsAlias(alias);
@@ -109,53 +149,110 @@ public class KeyStoreService {
         }
 
     }
+    
+    
+    private void generateKeys(AbstractCryptoProvider cryptoProvider, List<Algorithm> signatureAlgorithms,
+            List<Algorithm> encryptionAlgorithms, int expiration, int expirationHours) throws Exception, JSONException {
+        
+        log.debug("\n\n KeyStoreService::generateKeys() - cryptoProvider: {}, signatureAlgorithms: {}, encryptionAlgorithms:{}, expiration: {}, expirationHours: {} ", cryptoProvider, signatureAlgorithms, encryptionAlgorithms, expiration, expirationHours);
+        //Generate Key set
+        JSONWebKeySet jwks = new JSONWebKeySet();
+
+        Calendar calendar = new GregorianCalendar();
+        calendar.add(Calendar.DATE, expiration);
+        calendar.add(Calendar.HOUR, expirationHours);
+
+        for (Algorithm algorithm : signatureAlgorithms) {
+            
+            SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.fromString(algorithm.name());
+            JSONObject result = cryptoProvider.generateKey(algorithm, calendar.getTimeInMillis(), Use.SIGNATURE);
+
+            JSONWebKey key = new JSONWebKey();
+            key.setKid(result.getString(KEY_ID));
+            key.setUse(Use.SIGNATURE);
+            key.setAlg(algorithm);
+            key.setKty(KeyType.fromString(signatureAlgorithm.getFamily().toString()));
+            key.setExp(result.optLong(EXPIRATION_TIME));
+            key.setCrv(signatureAlgorithm.getCurve());
+            key.setN(result.optString(MODULUS));
+            key.setE(result.optString(EXPONENT));
+            key.setX(result.optString(X));
+            key.setY(result.optString(Y));
+
+            JSONArray x5c = result.optJSONArray(CERTIFICATE_CHAIN);
+            key.setX5c(io.jans.as.model.util.StringUtils.toList(x5c));
+
+            jwks.getKeys().add(key);
+        }
+
+        for (Algorithm algorithm : encryptionAlgorithms) {
+            KeyEncryptionAlgorithm encryptionAlgorithm = KeyEncryptionAlgorithm.fromName(algorithm.getParamName());
+            JSONObject result = cryptoProvider.generateKey(algorithm, calendar.getTimeInMillis(), Use.ENCRYPTION);
+
+            JSONWebKey key = new JSONWebKey();
+            key.setKid(result.getString(KEY_ID));
+            key.setUse(Use.ENCRYPTION);
+            key.setAlg(algorithm);
+            key.setKty(KeyType.fromString(encryptionAlgorithm.getFamily()));
+            key.setExp(result.optLong(EXPIRATION_TIME));
+            key.setN(result.optString(MODULUS));
+            key.setE(result.optString(EXPONENT));
+            key.setX(result.optString(X));
+            key.setY(result.optString(Y));
+
+            JSONArray x5c = result.optJSONArray(CERTIFICATE_CHAIN);
+            key.setX5c(io.jans.as.model.util.StringUtils.toList(x5c));
+
+            jwks.getKeys().add(key);
+        }
+
+        System.out.println(jwks);
+    }
 
     /*
-     * public void importKey(String csrPem) throws Exception { try {
-     * log.debug("\n\n KeyStoreService::importKey() - csrPem = " + csrPem); if
-     * (csrPem == null) { throw new WebApplicationException(" CSR PEM is null! "); }
-     * 
-     * //1. Convert CSR PEM to X509Certificate X509Certificate cert =
-     * x509CertificateFromPem(csrPem);
-     * log.debug("\n\n KeyStoreService::importKey() - cert = " + cert);
-     * 
-     * // Java API requires a certificate chain X509Certificate[] chain = new
-     * X509Certificate[1]; chain[0] = cert;
-     * 
-     * String alias = UUID.randomUUID().toString() +
-     * getKidSuffix(cert.getExtendedKeyUsage(), cert.getSigAlgName());
-     * log.debug("\n\n KeyStoreService::importKey() - alias = " + alias);
-     * 
-     * //Get keyStore details AppConfiguration appConfiguration =
-     * this.getAppConfiguration(); String keyStoreFile =
-     * appConfiguration.getKeyStoreFile(); String keyStoreSecret =
-     * appConfiguration.getKeyStoreSecret();
-     * log.debug("\n\n KeyStoreService::importKey() - keyStoreFile = " +
-     * keyStoreFile + " , keyStoreSecret = " + keyStoreSecret);
-     * 
-     * //Get CryptoProvider AuthCryptoProvider cryptoProvider = new
-     * AuthCryptoProvider(keyStoreFile, keyStoreSecret,dnName);
-     * log.debug("\n\n KeyStoreService::importKey() - cryptoProvider = " +
-     * cryptoProvider);
-     * 
-     * //Get keys
-     * log.debug("\n\n KeyStoreService::importKey() - cryptoProvider.getKeys() =" +
-     * cryptoProvider.getKeys());
-     * 
-     * //cryptoProvider.keyStore.setKeyEntry(alias, pk,
-     * keyStoreSecret.toCharArray(), chain);
-     * cryptoProvider.getKeyStore().setCertificateEntry(alias, cert);
-     * log.debug("\n\n KeyStoreService::importKey() - Certificate loaded");
-     * 
-     * //cryptoProvider.getKeyStore().setKeyEntry(alias, cert.getSignature(),
-     * chain);
-     * 
-     * 
-     * } catch (Exception exp) { exp.printStackTrace();
-     * log.error("Failed to import key", exp); }
-     * 
-     * }
-     */
+      public void importKey(String csrPem) throws Exception { 
+      try {
+      log.debug("\n\n KeyStoreService::importKey() - csrPem = " + csrPem);
+       if  (csrPem == null) 
+       { throw new WebApplicationException(" CSR PEM is null! "); 
+       }
+      
+      //1. Convert CSR PEM to X509Certificate X509Certificate cert =
+      x509CertificateFromPem(csrPem);
+      log.debug("\n\n KeyStoreService::importKey() - cert = " + cert);
+      
+      // Java API requires a certificate chain X509Certificate[] chain = new
+      X509Certificate[1]; chain[0] = cert;
+      
+      String alias = UUID.randomUUID().toString() +
+      getKidSuffix(cert.getExtendedKeyUsage(), cert.getSigAlgName());
+      log.debug("\n\n KeyStoreService::importKey() - alias = " + alias);
+      
+      //Get keyStore details 
+       AppConfiguration appConfiguration =  this.getAppConfiguration(); 
+      String keyStoreFile = appConfiguration.getKeyStoreFile(); 
+      String keyStoreSecret = appConfiguration.getKeyStoreSecret();
+      log.debug("\n\n KeyStoreService::importKey() - keyStoreFile = " + keyStoreFile + " , keyStoreSecret = " + keyStoreSecret);
+      
+      //Get CryptoProvider 
+      AuthCryptoProvider cryptoProvider = new AuthCryptoProvider(keyStoreFile, keyStoreSecret,dnName);
+      log.debug("\n\n KeyStoreService::importKey() - cryptoProvider = " + cryptoProvider);
+      
+      //Get keys
+      log.debug("\n\n KeyStoreService::importKey() - cryptoProvider.getKeys() =" + cryptoProvider.getKeys());
+      
+      //cryptoProvider.keyStore.setKeyEntry(alias, pk,keyStoreSecret.toCharArray(), chain);
+      cryptoProvider.getKeyStore().setCertificateEntry(alias, cert);
+      log.debug("\n\n KeyStoreService::importKey() - Certificate loaded");
+      
+      //cryptoProvider.getKeyStore().setKeyEntry(alias, cert.getSignature(),chain);
+      
+      
+      } catch (Exception exp) { exp.printStackTrace();
+      log.error("Failed to import key", exp); }
+      
+      }*/
+     
     private String getKidSuffix(String use, String algorithm) {
         // return "_" + use.getParamName().toLowerCase() + "_" +
         // algorithm.toLowerCase();

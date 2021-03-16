@@ -1,11 +1,12 @@
 {
   "format" : "pem",
-  "clientCertificate" : "-----BEGIN CERTIFICATE-----
-            MIIBBjCBrAIBAjAKBggqhkjOPQQDAjAPMQ0wCwYDVQQDDARtdGxzMB4XDTE4MTAx
-            ODEyMzcwOVoXDTIyMDUwMjEyMzcwOVowDzENMAsGA1UEAwwEbXRsczBZMBMGByqG
-            SM49AgEGCCqGSM49AwEHA0IABNcnyxwqV6hY8QnhxxzFQ03C7HKW9OylMbnQZjjJ
-            Au08/coZwxS7LfA4vOLS9WuneIXhbGGWvsDSb0tH6IxLm8wCgYIKoZIzj0EAwID
-            SQAwRgIhAP0RC1E+vwJD/D1AGHGzuri+hlV/PpQEKTWUVeORWz83AiEA5x2eXZOV
-            bUlJSGQgjwD5vaUaKlLR50Q2DmFfQj1L+SY=
-            -----END CERTIFICATE-----"
+  "content" : "-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4LZF1PaIS1lNjWPC8WK6
+Hxl0NaQE7tY6Ixe8VB9THGBAnjc/6AgPlaLuz3Sy+j/A+JnimvdYyJLHlPxxvU3a
+3MTId2FnkB1v0nfMTIZRwuwcKD8mrftoRjlzetG1zSCg7XGi+xTIyH54pgkdjjnA
+CBAVgDwIrxfcUqpdaCyjNAS/Hn2DmFq8PJTs6QQyI5HHMxj2uNGeFC4KfFqZGjw0
+8rI6mbPsZULeFmfMFNtHFbMt9JMMO6921Y/2BwwbLKPSGnqShWcWSxffLBIs0rBO
+KkWFbvCmfmhmLvgfhuZtU4diBnMfPFX3tQy0MUPyqQnwGa+sb0S4NdxgeROs6b8r
+owIDAQAB
+-----END PUBLIC KEY-----"
 }
