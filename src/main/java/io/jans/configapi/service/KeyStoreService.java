@@ -55,24 +55,34 @@ public class KeyStoreService {
     @Inject
     ConfigurationService configurationService;
     
-    final String content = "-----BEGIN PUBLIC KEY-----\n" +
-            "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4LZF1PaIS1lNjWPC8WK6\n" +
-            "Hxl0NaQE7tY6Ixe8VB9THGBAnjc/6AgPlaLuz3Sy+j/A+JnimvdYyJLHlPxxvU3a\n" +
-            "3MTId2FnkB1v0nfMTIZRwuwcKD8mrftoRjlzetG1zSCg7XGi+xTIyH54pgkdjjnA\n" +
-            "CBAVgDwIrxfcUqpdaCyjNAS/Hn2DmFq8PJTs6QQyI5HHMxj2uNGeFC4KfFqZGjw0\n" +
-            "8rI6mbPsZULeFmfMFNtHFbMt9JMMO6921Y/2BwwbLKPSGnqShWcWSxffLBIs0rBO\n" +
-            "KkWFbvCmfmhmLvgfhuZtU4diBnMfPFX3tQy0MUPyqQnwGa+sb0S4NdxgeROs6b8r\n" +
-            "owIDAQAB\n" +
-            "-----END PUBLIC KEY-----";
-    
-    public static final String TEST_PEM_1 = "-----BEGIN CERTIFICATE-----\n" +
-            "MIIBBjCBrAIBAjAKBggqhkjOPQQDAjAPMQ0wCwYDVQQDDARtdGxzMB4XDTE4MTAx\n" +
-            "ODEyMzcwOVoXDTIyMDUwMjEyMzcwOVowDzENMAsGA1UEAwwEbXRsczBZMBMGByqG\n" +
-            "SM49AgEGCCqGSM49AwEHA0IABNcnyxwqV6hY8QnhxxzFQ03C7HKW9OylMbnQZjjJ\n" +
-            "/Au08/coZwxS7LfA4vOLS9WuneIXhbGGWvsDSb0tH6IxLm8wCgYIKoZIzj0EAwID\n" +
-            "SQAwRgIhAP0RC1E+vwJD/D1AGHGzuri+hlV/PpQEKTWUVeORWz83AiEA5x2eXZOV\n" +
-            "bUlJSGQgjwD5vaUaKlLR50Q2DmFfQj1L+SY=\n" +
-            "-----END CERTIFICATE-----";
+
+
+    public static final String CERT_PEM_1 ="-----BEGIN CERTIFICATE-----\n" +
+            "MIID9TCCAt2gAwIBAgIUIPO14ynwJG3dym6K6zgYYmJFc4cwDQYJKoZIhvcNAQEL\n" +
+            "BQAwgYkxCzAJBgNVBAYTAklOMQ0wCwYDVQQIDARNYWhhMQwwCgYDVQQHDANNVU0x\n" +
+            "FDASBgNVBAoMC1Rlc3RTZXJ2ZXIxMQ8wDQYDVQQLDAZTVyBSVEUxGDAWBgNVBAMM\n" +
+            "D3Rlc3RzZXJ2ZXIxLmNvbTEcMBoGCSqGSIb3DQEJARYNcHVqYUBnbHV1Lm9yZzAe\n" +
+            "Fw0yMTAzMTcwODI3MzZaFw0zMTAzMTUwODI3MzZaMIGJMQswCQYDVQQGEwJJTjEN\n" +
+            "MAsGA1UECAwETWFoYTEMMAoGA1UEBwwDTVVNMRQwEgYDVQQKDAtUZXN0U2VydmVy\n" +
+            "MTEPMA0GA1UECwwGU1cgUlRFMRgwFgYDVQQDDA90ZXN0c2VydmVyMS5jb20xHDAa\n" +
+            "BgkqhkiG9w0BCQEWDXB1amFAZ2x1dS5vcmcwggEiMA0GCSqGSIb3DQEBAQUAA4IB\n" +
+            "DwAwggEKAoIBAQDO4M5S3lfP75CXZkLF+NePPza0fJnr8EA4qbWhbsNHpwqd/GjD\n" +
+            "6o3dxr+NlcFp/vGcrQ10nOfpLJpmGrhSiVdc13unPP7xdyS0cD6ehCBeBgompckV\n" +
+            "MYG0cZVAJuucxcnMds8K6kYRryJu4GuYsVDJYgWzdTAECGzzJHpcAaT4X5zhglIj\n" +
+            "bAmcLmjuTT5Febw0VhRYMozJisf4unjJl/8FuDdv8PICjoYy+nbEZbhhiryUR6kO\n" +
+            "Xk/ODI9PQifWOt3VN/legylmhMUtFwEejXTcZJrhSB73O6CpsuJeljKVZNcroRmS\n" +
+            "j/avarKzQwRQ5wCzMdzNbmrvxyCexWul+ZpfAgMBAAGjUzBRMB0GA1UdDgQWBBQ2\n" +
+            "tCvZhznLlb9X7CLWNE4+5iMMiDAfBgNVHSMEGDAWgBQ2tCvZhznLlb9X7CLWNE4+\n" +
+            "5iMMiDAPBgNVHRMBAf8EBTADAQH/MA0GCSqGSIb3DQEBCwUAA4IBAQCIsvyrYEc2\n" +
+            "0QCC4nMF8cWgRwagm0vkkLaIzLKjATE2/tOarjLvUGp3H+0507YaZmkNJyuint7T\n" +
+            "wmUZaxg6uLLfx6ZL0OX1XJK337sCZ4BlhX3zTyvINkzBwtlNRv+tlGz1/dtGdOJA\n" +
+            "eCcDzdDi2wFB5cILwnWM35Oe9RRujVZ1I1EV1gZAxq2aNpIv5ayl2gW2T3VQ+szz\n" +
+            "JRFcbxySpWQFyYn+eCmTz4cw8b4t9cYKwxkWoV9lhnMIRlTuP++8wY3RBulB67AP\n" +
+            "nr+3ExwNzTZKqx6ZgFQNyVCitWHb8cuzLll3qEaOLoDIyt6X5slvrP7FIWq1kOhp\n" +
+            "NvnNZfJqDktk\n" +
+            "-----END CERTIFICATE-----"
+            ;
+
 
 
     private AppConfiguration getAppConfiguration() {
@@ -88,12 +98,12 @@ public class KeyStoreService {
            
             log.debug("\n\n KeyStoreService::importKey() - format = " + format +" , certContent = " + certContent);
             if (format == null || certContent == null) {
-                throw new WebApplicationException(" CSR PEM is null! ");
+                throw new WebApplicationException(" CERT PEM is null! ");
             }
 
             //For testing - TBD - Start
-            certContent = TEST_PEM_1;
-            log.debug("\n\n KeyStoreService::importKey() - format  = " + format +" , certContent = " + certContent);
+            certContent = CERT_PEM_1;
+            log.debug("\n\n KeyStoreService::importKey() - TEST_PEM_2 format  = " + format +" , certContent = " + certContent);
             //For testing - TBD - End - 
             
             // Get keyStore details
@@ -115,8 +125,14 @@ public class KeyStoreService {
             log.debug("\n\n KeyStoreService::importKey() - cryptoProvider.getKeys() =" + cryptoProvider.getKeys());
 
            
-            //Get Certificate from PEM
+            //Get Key
+            CertificateFactory fact = CertificateFactory.getInstance("X.509");
             X509Certificate cert = this.x509CertificateFromPem(certContent);
+            
+            /*FileInputStream is = new FileInputStream (args[0]);
+            X509Certificate cer = (X509Certificate) fact.generateCertificate(certContent);
+            PublicKey key = cer.getPublicKey();*/
+            
             
             log.debug("\n\n KeyStoreService::importKey() - cert =" + cert);
             PublicKey publicKey = cert.getPublicKey();
@@ -270,9 +286,11 @@ public class KeyStoreService {
 
     public X509Certificate x509CertificateFromPem(String pem) {
         pem = StringUtils.remove(pem, "-----BEGIN CERTIFICATE-----");
-        pem = StringUtils.remove(pem, "-----END CERTIFICATE-----");
+        pem = StringUtils.remove(pem, "-----END CERTIFICATE-----");        
         return x509CertificateFromBytes(Base64.decode(pem));
     }
+    
+
 
     public X509Certificate x509CertificateFromBytes(byte[] cert) {
         try {
