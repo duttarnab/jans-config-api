@@ -132,7 +132,7 @@ public class KeyStoreService {
             // List<Algorithm> encryptionAlgorithms, int expiration, int expirationHours)
 
             // Verify if key successfully imported
-            boolean keyExistsInStore = cryptoProvider.getKeyStore().containsAlias(alias);
+            boolean keyExistsInStore = cryptoProvider.getKeyStore().containsAlias(clientCertificate.getAlias());
             log.debug("\n\n KeyStoreService::importKey() - keyExistsInStore 3 =" + keyExistsInStore);
         } catch (Exception exp) {
             exp.printStackTrace();
