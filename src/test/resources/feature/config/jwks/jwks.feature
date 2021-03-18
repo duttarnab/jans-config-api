@@ -15,7 +15,7 @@ Feature: JWKS endpoint
   Scenario: Post JWKS
     Given url  mainUrl
     And header Authorization = 'Bearer ' + accessToken
-    And request read('pem-cert.json')
+    And request param { format: 'PEM' , alias:'8' , key: read('key.pem') }
     And print request
     When method POST
     Then status 200
