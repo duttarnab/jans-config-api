@@ -32,6 +32,7 @@ import java.security.cert.X509Certificate;
 import java.security.spec.ECGenParameterSpec;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.util.HashMap;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.List;
@@ -62,6 +63,21 @@ public class KeyStoreService {
 
     @Inject
     ConfigurationService configurationService;
+    
+    private HashMap<String,String> algorithmMap = new HashMap();
+    {
+        algorithmMap.put("SHA256WITHRSA","RS256");
+        algorithmMap.put("SHA384WITHRSA","RS384");
+        algorithmMap.put("SHA512WITHRSA","RS512");
+        algorithmMap.put("SHA256WITHECDSA","ES256");
+        algorithmMap.put("SHA384WITHECDSA","ES384");
+        algorithmMap.put("SHA512WITHECDSA","ES512");
+        algorithmMap.put("SHA256withRSAandMGF1","PS256");
+        algorithmMap.put("SHA384withRSAandMGF1","PS384");
+        algorithmMap.put("SHA512withRSAandMGF1","PS512");
+
+    }
+    
 
     private AppConfiguration getAppConfiguration() {
         AppConfiguration appConfiguration = configurationService.find();
@@ -76,44 +92,53 @@ public class KeyStoreService {
         Preconditions.checkNotNull(clientCertificate.getPrivateKey(), "Private Key cannot be null !!!");
         Preconditions.checkNotNull(clientCertificate.getPublicKey(), "Public Key cannot be null !!!");
     }
+
     
-    public void importKey(String format, String alias, String key) throws Exception {
+    
+    public void importKey(String format, String alias, String certificateStr, String privateKeyStr) throws Exception {
         try {
-            log.debug("\n\n KeyStoreService::importKey() - format = " + format+" , alias = "+alias+", key = "+key);
+            log.debug("\n\n KeyStoreService::importKey() - format = " + format + " , alias = " + alias
+                    + ", certificateStr = " + certificateStr + " ,privateKeyStr = " + privateKeyStr);
 
-            // Validate cert
+            // Validate input
             Preconditions.checkNotNull(format, "Format cannot be null !!!");
-            Preconditions.checkNotNull(key, "Key cannot be null !!!");
+            Preconditions.checkNotNull(alias, "Alias cannot be null !!!");
+            Preconditions.checkNotNull(certificateStr, "Certificate cannot be null !!!");
+            Preconditions.checkNotNull(privateKeyStr, "Private Key cannot be null !!!");
 
-            byte[] publicKeyBytes = parseDERFromPEM(key, "-----BEGIN PUBLIC KEY-----", "-----END PUBLIC KEY-----");
-            byte[] privateKeyBytes = parseDERFromPEM(key, "-----BEGIN PRIVATE KEY-----", "-----END PRIVATE KEY-----");
+            CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
+            X509Certificate cert = this.x509CertificateFromPem(certificateStr);
+            log.debug("\n\n KeyStoreService::importKey() - cert =" + cert);
             
-            if(publicKeyBytes == null || privateKeyBytes == null) {
-                throw new WebApplicationException("Both Public and Private Keys required!");
+            log.debug("\n\n KeyStoreService::importKey() - cert.getSigAlgName() =" + cert.getSigAlgName()
+            +" , cert.getPublicKey().getAlgorithm() = "+cert.getPublicKey().getAlgorithm()
+            );
+            
+            String algorithmStr = algorithmMap.get(cert.getSigAlgName().toUpperCase());
+            log.debug("\n\n KeyStoreService::importKey() - algorithmStr =" + algorithmStr +" ,algorithmMap = "+algorithmMap);
+            if(algorithmStr == null) {
+                throw new WebApplicationException("Certificate Algorithm - ("+cert.getSigAlgName()+") not found!");
             }
-            log.debug("\n\n KeyStoreService::importKey() - publicKeyBytes = "+publicKeyBytes+" , privateKeyBytes = "+privateKeyBytes);
+            
+                      
+            // Get Key chain
+            X509Certificate[] certChain = new X509Certificate[1];
+            certChain[0] = cert;
+            log.debug("\n\n KeyStoreService::importKey() - certChain = " + certChain);
             
             // Get Public Key
-            PublicKey publicKey = this.generatePublicKey(publicKeyBytes);
-                       log.debug("\n\n KeyStoreService::importKey() - publicKey =" + publicKey 
-                               + " , publicKey.getAlgorithm() = " + publicKey.getAlgorithm()
-                               + " , publicKey.getFormat() = " + publicKey.getFormat()
-                               + " , publicKey.getEncoded() = " + publicKey.getEncoded()
-                               );
-                   
+            PublicKey publicKey = cert.getPublicKey();
+            byte[] encodedKey = publicKey.getEncoded();
+            log.debug("\n\n KeyStoreService::importKey() - publicKey =" + publicKey + " , publicKey.getAlgorithm() = "
+                    + publicKey.getAlgorithm() + " , publicKey.getFormat() = " + publicKey.getFormat()
+                    + " , encodedKey = " + encodedKey);
             
             // Get Private Key
-            PrivateKey privateKey = this.generatePrivateKey(privateKeyBytes);
-            log.debug("\n\n KeyStoreService::importKey() - privateKey =" + privateKey
-                    + " , privateKey.getAlgorithm() = " + privateKey.getAlgorithm()
-                    + " , privateKey.getFormat() = " + privateKey.getFormat()
-                    + " , privateKey.getEncoded() = " + privateKey.getEncoded()
-                    );
-            
-            if( publicKey.getAlgorithm().isEmpty() && !publicKey.getAlgorithm().equals(privateKey.getAlgorithm())) {
-                throw new WebApplicationException("Public and Private Key Algorithm mismatch!");
-            }
-
+            byte[] encoded = getKeyFromPem(privateKeyStr);
+            KeyFactory keyFactory = KeyFactory.getInstance(publicKey.getAlgorithm());
+            PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(encoded);
+            PrivateKey privateKey = keyFactory.generatePrivate(keySpec);
+            log.debug("\n\n KeyStoreService::importKey() - privateKey =" + privateKey.getEncoded());
 
             // Get keyStore details
             AppConfiguration appConfiguration = this.getAppConfiguration();
@@ -132,20 +157,24 @@ public class KeyStoreService {
 
             // Get keys
             log.debug("\n\n KeyStoreService::importKey() - cryptoProvider.getKeys() =" + cryptoProvider.getKeys());
-            
-          //Generate JWK 
-            JSONWebKeySet jwks = this.generateKeys(cryptoProvider, publicKey.getAlgorithm(),publicKey.getAlgorithm());
-            
-            //import
-            cryptoProvider.getKeyStore().setKeyEntry(alias, publicKey, keyStoreSecret.toCharArray(), null);
 
-         
+            // Generate JWK
+           // JSONWebKeySet jwks = this.generateKeys(cryptoProvider, algorithmStr, algorithmStr);
+
+            // import
+            //cryptoProvider.getKeyStore().setKeyEntry(alias, publicKey, keyStoreSecret.toCharArray(), null);
+
+            JSONWebKey jsonWebKey = generateSigningKey(cryptoProvider, algorithmStr);
+                     
+            cryptoProvider.getKeyStore().setKeyEntry(jsonWebKey.getKid(), privateKey,
+                    keyStoreSecret.toCharArray(), certChain);
+
+
             // Verify if key successfully imported
             boolean keyExistsInStore = cryptoProvider.getKeyStore().containsAlias(alias);
-            
-            //Update Jwks
-            
-            
+
+            // Update Jwks
+
             log.debug("\n\n KeyStoreService::importKey() - keyExistsInStore 3 =" + keyExistsInStore);
         } catch (Exception exp) {
             exp.printStackTrace();
@@ -155,11 +184,90 @@ public class KeyStoreService {
 
     }
 
+    /*
+     * public void importKey1(String format, String alias, String key) throws
+     * Exception { try { log.debug("\n\n KeyStoreService::importKey() - format = " +
+     * format+" , alias = "+alias+", key = "+key);
+     * 
+     * // Validate cert Preconditions.checkNotNull(format,
+     * "Format cannot be null !!!"); Preconditions.checkNotNull(key,
+     * "Key cannot be null !!!");
+     * 
+     * byte[] publicKeyBytes = parseDERFromPEM(key, "-----BEGIN PUBLIC KEY-----",
+     * "-----END PUBLIC KEY-----"); byte[] privateKeyBytes = parseDERFromPEM(key,
+     * "-----BEGIN PRIVATE KEY-----", "-----END PRIVATE KEY-----");
+     * 
+     * if(publicKeyBytes == null || privateKeyBytes == null) { throw new
+     * WebApplicationException("Both Public and Private Keys required!"); }
+     * log.debug("\n\n KeyStoreService::importKey() - publicKeyBytes = "
+     * +publicKeyBytes+" , privateKeyBytes = "+privateKeyBytes);
+     * 
+     * // Get Public Key PublicKey publicKey =
+     * this.generatePublicKey(publicKeyBytes);
+     * log.debug("\n\n KeyStoreService::importKey() - publicKey =" + publicKey +
+     * " , publicKey.getAlgorithm() = " + publicKey.getAlgorithm() +
+     * " , publicKey.getFormat() = " + publicKey.getFormat() +
+     * " , publicKey.getEncoded() = " + publicKey.getEncoded() );
+     * 
+     * 
+     * // Get Private Key PrivateKey privateKey =
+     * this.generatePrivateKey(privateKeyBytes);
+     * log.debug("\n\n KeyStoreService::importKey() - privateKey =" + privateKey +
+     * " , privateKey.getAlgorithm() = " + privateKey.getAlgorithm() +
+     * " , privateKey.getFormat() = " + privateKey.getFormat() +
+     * " , privateKey.getEncoded() = " + privateKey.getEncoded() );
+     * 
+     * if( publicKey.getAlgorithm().isEmpty() &&
+     * !publicKey.getAlgorithm().equals(privateKey.getAlgorithm())) { throw new
+     * WebApplicationException("Public and Private Key Algorithm mismatch!"); }
+     * 
+     * 
+     * // Get keyStore details AppConfiguration appConfiguration =
+     * this.getAppConfiguration(); String keyStoreFile =
+     * appConfiguration.getKeyStoreFile(); String keyStoreSecret =
+     * appConfiguration.getKeyStoreSecret();
+     * log.debug("\n\n KeyStoreService::importKey() - keyStoreFile = " +
+     * keyStoreFile + " , keyStoreSecret = " + keyStoreSecret);
+     * 
+     * // For testing - TBD - Start keyStoreFile =
+     * "D:\\1.PUJA\\8.PUJA_WORK_EXP\\3.COMPANY\\9.GLUU\\4.SERVER_FILES\\pujavs.jans.server2\\opt\\gluu-server\\etc\\certs\\jans-auth-keys.jks";
+     * // For testing - TBD - End
+     * 
+     * // Get CryptoProvider AuthCryptoProvider cryptoProvider = new
+     * AuthCryptoProvider(keyStoreFile, keyStoreSecret, dnName);
+     * log.debug("\n\n KeyStoreService::importKey() - cryptoProvider = " +
+     * cryptoProvider);
+     * 
+     * // Get keys
+     * log.debug("\n\n KeyStoreService::importKey() - cryptoProvider.getKeys() =" +
+     * cryptoProvider.getKeys());
+     * 
+     * //Generate JWK JSONWebKeySet jwks = this.generateKeys(cryptoProvider,
+     * publicKey.getAlgorithm(),publicKey.getAlgorithm());
+     * 
+     * //import cryptoProvider.getKeyStore().setKeyEntry(alias, publicKey,
+     * keyStoreSecret.toCharArray(), null);
+     * 
+     * 
+     * // Verify if key successfully imported boolean keyExistsInStore =
+     * cryptoProvider.getKeyStore().containsAlias(alias);
+     * 
+     * //Update Jwks
+     * 
+     * 
+     * log.debug("\n\n KeyStoreService::importKey() - keyExistsInStore 3 =" +
+     * keyExistsInStore); } catch (Exception exp) { exp.printStackTrace();
+     * log.error("Failed to import key", exp); throw new
+     * WebApplicationException("Error while importing key - " + exp); }
+     * 
+     * }
+     */
+
     private byte[] parseDERFromPEM(String data, String beginDelimiter, String endDelimiter) {
         log.debug("\n\n KeyStoreService::parseDERFromPEM() - data =" + data + " , beginDelimiter = " + beginDelimiter
                 + " , endDelimiter = " + endDelimiter);
-        
-        if(data!=null && data.contains(beginDelimiter) && data.contains(endDelimiter)) {
+
+        if (data != null && data.contains(beginDelimiter) && data.contains(endDelimiter)) {
             String[] tokens = data.split(beginDelimiter);
             tokens = tokens[1].split(endDelimiter);
             return (Base64.decode(tokens[0]));
@@ -167,88 +275,84 @@ public class KeyStoreService {
         return null;
     }
 
-    private PublicKey generatePublicKey(byte[] keyBytes)
-            throws InvalidKeySpecException, NoSuchAlgorithmException {
-         PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(keyBytes);
-         KeyFactory factory = KeyFactory.getInstance("RSA");
-         return factory.generatePublic(spec);
-          }
-    
-    private PrivateKey generatePrivateKey(byte[] keyBytes)
-            throws InvalidKeySpecException, NoSuchAlgorithmException {
-         PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(keyBytes);
-         KeyFactory factory = KeyFactory.getInstance("RSA");
-         return factory.generatePrivate(spec);
-          }
-    
+    private PublicKey generatePublicKey(byte[] keyBytes) throws InvalidKeySpecException, NoSuchAlgorithmException {
+        PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(keyBytes);
+        KeyFactory factory = KeyFactory.getInstance("RSA");
+        return factory.generatePublic(spec);
+    }
+
+    private PrivateKey generatePrivateKey(byte[] keyBytes) throws InvalidKeySpecException, NoSuchAlgorithmException {
+        PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(keyBytes);
+        KeyFactory factory = KeyFactory.getInstance("RSA");
+        return factory.generatePrivate(spec);
+    }
+
     /*
-    public void importKey(ClientCertificate clientCertificate) throws Exception {
-        try {
-            log.debug("\n\n KeyStoreService::importKey() - clientCertificate = " + clientCertificate);
-
-            // Validate cert
-            validateClientCertificate(clientCertificate);
-
-            // Get cert
-            CertificateFactory fact = CertificateFactory.getInstance("X.509");
-            X509Certificate cert = this.x509CertificateFromPem(clientCertificate.getCert());
-            log.debug("\n\n KeyStoreService::importKey() - cert =" + cert);
-
-            // Get Key chain
-            X509Certificate[] certChain = new X509Certificate[1];
-            certChain[0] = cert;
-            log.debug("\n\n KeyStoreService::importKey() - certChain = " + certChain);
-
-            // Get Public Key
-            PublicKey publicKey = cert.getPublicKey();
-            byte[] encodedKey = publicKey.getEncoded();
-            log.debug("\n\n KeyStoreService::importKey() - publicKey =" + publicKey + " , publicKey.getAlgorithm() = "
-                    + publicKey.getAlgorithm() + " , publicKey.getFormat() = " + publicKey.getFormat()
-                    + " , encodedKey = " + encodedKey);
-
-            // Get Private Key
-            byte[] encoded = getKeyFromPem(clientCertificate.getPrivateKey());
-            KeyFactory keyFactory = KeyFactory.getInstance(publicKey.getAlgorithm());
-            PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(encoded);
-            PrivateKey key = keyFactory.generatePrivate(keySpec);
-            log.debug("\n\n KeyStoreService::importKey() - key =" + key.getEncoded());
-
-            
-            // import key
-            // Get keyStore details
-            AppConfiguration appConfiguration = this.getAppConfiguration();
-            String keyStoreFile = appConfiguration.getKeyStoreFile();
-            String keyStoreSecret = appConfiguration.getKeyStoreSecret();
-            log.debug("\n\n KeyStoreService::importKey() - keyStoreFile = " + keyStoreFile + " , keyStoreSecret = "
-                    + keyStoreSecret);
-
-            // For testing - TBD - Start
-            keyStoreFile = "D:\\1.PUJA\\8.PUJA_WORK_EXP\\3.COMPANY\\9.GLUU\\4.SERVER_FILES\\pujavs.jans.server2\\opt\\gluu-server\\etc\\certs\\jans-auth-keys.jks";
-            // For testing - TBD - End
-
-            // Get CryptoProvider
-            AuthCryptoProvider cryptoProvider = new AuthCryptoProvider(keyStoreFile, keyStoreSecret, dnName);
-            log.debug("\n\n KeyStoreService::importKey() - cryptoProvider = " + cryptoProvider);
-
-            // Get keys
-            log.debug("\n\n KeyStoreService::importKey() - cryptoProvider.getKeys() =" + cryptoProvider.getKeys());
-
-            cryptoProvider.getKeyStore().setKeyEntry(clientCertificate.getAlias(), publicKey, keyStoreSecret.toCharArray(), certChain);
-
-            // Generate Jwks
-            // this.generateKeys(cryptoProvider, List<Algorithm> signatureAlgorithms,
-            // List<Algorithm> encryptionAlgorithms, int expiration, int expirationHours)
-
-            // Verify if key successfully imported
-            boolean keyExistsInStore = cryptoProvider.getKeyStore().containsAlias(clientCertificate.getAlias());
-            log.debug("\n\n KeyStoreService::importKey() - keyExistsInStore 3 =" + keyExistsInStore);
-        } catch (Exception exp) {
-            exp.printStackTrace();
-            log.error("Failed to import key", exp);
-            throw new WebApplicationException("Error while importing key - " + exp);
-        }
-
-    }*/
+      public void importKey2(ClientCertificate clientCertificate) throws Exception {
+      try { 
+          log.debug("\n\n KeyStoreService::importKey() - clientCertificate = " +
+      clientCertificate);
+      
+      // Validate cert validateClientCertificate(clientCertificate);
+      
+      // Get cert CertificateFactory fact =
+      CertificateFactory.getInstance("X.509");
+      X509Certificate cert = this.x509CertificateFromPem(clientCertificate.getCert());
+      log.debug("\n\n KeyStoreService::importKey() - cert =" + cert);
+      
+      // Get Key chain
+      X509Certificate[] certChain = new X509Certificate[1];
+      certChain[0] = cert;
+      log.debug("\n\n KeyStoreService::importKey() - certChain = " + certChain);
+      
+      // Get Public Key 
+      PublicKey publicKey = cert.getPublicKey(); 
+      byte[]  encodedKey = publicKey.getEncoded();
+      log.debug("\n\n KeyStoreService::importKey() - publicKey =" + publicKey +
+      " , publicKey.getAlgorithm() = " + publicKey.getAlgorithm() +
+      " , publicKey.getFormat() = " + publicKey.getFormat() + " , encodedKey = " +
+      encodedKey);
+      
+      // Get Private 
+      Key byte[] encoded = getKeyFromPem(clientCertificate.getPrivateKey()); 
+      KeyFactory keyFactory = KeyFactory.getInstance(publicKey.getAlgorithm()); 
+      PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(encoded); 
+      PrivateKey key = keyFactory.generatePrivate(keySpec);
+      log.debug("\n\n KeyStoreService::importKey() - key =" + key.getEncoded());
+      
+      
+      // import key // Get keyStore details 
+      AppConfiguration appConfiguration = this.getAppConfiguration(); String keyStoreFile =
+      appConfiguration.getKeyStoreFile(); 
+      String keyStoreSecret = appConfiguration.getKeyStoreSecret();
+      log.debug("\n\n KeyStoreService::importKey() - keyStoreFile = " + keyStoreFile + " , keyStoreSecret = " + keyStoreSecret);
+      
+      // For testing - TBD - Start keyStoreFile =
+      "D:\\1.PUJA\\8.PUJA_WORK_EXP\\3.COMPANY\\9.GLUU\\4.SERVER_FILES\\pujavs.jans.server2\\opt\\gluu-server\\etc\\certs\\jans-auth-keys.jks";
+      // For testing - TBD - End
+      
+      // Get CryptoProvider AuthCryptoProvider cryptoProvider = new
+      AuthCryptoProvider(keyStoreFile, keyStoreSecret, dnName);
+      log.debug("\n\n KeyStoreService::importKey() - cryptoProvider = " +cryptoProvider);
+      
+      // Get keys
+      log.debug("\n\n KeyStoreService::importKey() - cryptoProvider.getKeys() =" + cryptoProvider.getKeys());
+      
+      cryptoProvider.getKeyStore().setKeyEntry(clientCertificate.getAlias(),
+      publicKey, keyStoreSecret.toCharArray(), certChain);
+      
+      // Generate Jwks // 
+      //this.generateKeys(cryptoProvider, List<Algorithm> signatureAlgorithms, List<Algorithm> encryptionAlgorithms, int expiration,nt expirationHours)
+      
+      // Verify if key successfully imported boolean keyExistsInStore =
+      cryptoProvider.getKeyStore().containsAlias(clientCertificate.getAlias());
+      log.debug("\n\n KeyStoreService::importKey() - keyExistsInStore 3 =" +
+      keyExistsInStore); } catch (Exception exp) { exp.printStackTrace();
+      log.error("Failed to import key", exp); throw new
+      WebApplicationException("Error while importing key - " + exp); }
+      
+      }
+     */
 
     /*
      * 
@@ -348,7 +452,7 @@ public class KeyStoreService {
      * cryptoProvider.generateKey(algorithm, calendar.getTimeInMillis(),
      * Use.SIGNATURE);
      * 
-     * JSONWebKey key = new JSONWebKey(); key.setKid(result.getString(KEY_ID));
+     * JSONWebKey key = new JSONWebKey(); key.setKid(result.getString(KEY_ID));s
      * key.setUse(Use.SIGNATURE); key.setAlg(algorithm);
      * key.setKty(KeyType.fromString(signatureAlgorithm.getFamily().toString()));
      * key.setExp(result.optLong(EXPIRATION_TIME));
@@ -363,9 +467,49 @@ public class KeyStoreService {
      * 
      * }
      */
+    
+    private JSONWebKey generateSigningKey(AbstractCryptoProvider cryptoProvider, String strSignatureAlgorithm) throws Exception, JSONException {
+        log.debug("\n\n KeyStoreService::generateSigningKey() - cryptoProvider: {}, strSignatureAlgorithm: {}",cryptoProvider, strSignatureAlgorithm);
+        // Generate Key set
+        JSONWebKeySet jwks = new JSONWebKeySet();
 
-    private JSONWebKeySet generateKeys(AbstractCryptoProvider cryptoProvider, String strSignatureAlgorithm, String strEncryptionAlgorithm)
-            throws Exception, JSONException {
+        // ??????//this.getKeyExpirationTime(); // ??? TBD as Keys do not have expiry
+        // details ???
+
+        Algorithm algorithm = Algorithm.fromString(strSignatureAlgorithm);
+        log.debug("\n\n KeyStoreService::generateSigningKey() - algorithm = " + algorithm);
+
+        SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.fromString(algorithm.name());
+        log.debug("\n\n KeyStoreService::generateSigningKey() - signatureAlgorithm = " + signatureAlgorithm);
+
+        JSONObject result = cryptoProvider.generateKey(algorithm, this.getKeyExpirationTime(), Use.SIGNATURE);
+        log.debug("\n\n KeyStoreService::generateSigningKey() - result = " + result);
+
+        JSONWebKey key = new JSONWebKey();
+        key.setKid(result.getString(KEY_ID));
+        key.setUse(Use.SIGNATURE);
+        key.setAlg(algorithm);
+        key.setKty(KeyType.fromString(signatureAlgorithm.getFamily().toString()));
+        key.setExp(result.optLong(EXPIRATION_TIME));
+        key.setCrv(signatureAlgorithm.getCurve());
+        key.setN(result.optString(MODULUS));
+        key.setE(result.optString(EXPONENT));
+        key.setX(result.optString(X));
+        key.setY(result.optString(Y));
+
+        JSONArray x5c = result.optJSONArray(CERTIFICATE_CHAIN);
+        key.setX5c(io.jans.as.model.util.StringUtils.toList(x5c));
+
+        
+
+        log.debug("\n\n KeyStoreService::generateSigningKey() - key = " + key);
+        System.out.println(key);
+        return key;
+    
+    }
+
+    private JSONWebKeySet generateKeys(AbstractCryptoProvider cryptoProvider, String strSignatureAlgorithm,
+            String strEncryptionAlgorithm) throws Exception, JSONException {
 
         log.debug(
                 "\n\n KeyStoreService::generateKeys() - cryptoProvider: {}, strSignatureAlgorithm: {}, strEncryptionAlgorithm: {} ",
@@ -373,59 +517,62 @@ public class KeyStoreService {
         // Generate Key set
         JSONWebKeySet jwks = new JSONWebKeySet();
 
-       
-            //??????//this.getKeyExpirationTime(); // ??? TBD as Keys do not have expiry details ???      
+        // ??????//this.getKeyExpirationTime(); // ??? TBD as Keys do not have expiry
+        // details ???
+
+        Algorithm algorithm = Algorithm.fromString(strSignatureAlgorithm);
+        log.debug("\n\n KeyStoreService::generateKeys() - algorithm = " + algorithm);
+
+        SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.fromString(algorithm.name());
+        log.debug("\n\n KeyStoreService::generateKeys() - signatureAlgorithm = " + signatureAlgorithm);
+
+        JSONObject result = cryptoProvider.generateKey(algorithm, this.getKeyExpirationTime(), Use.SIGNATURE);
+        log.debug("\n\n KeyStoreService::generateKeys() - result = " + result);
+
+        JSONWebKey key = new JSONWebKey();
+        key.setKid(result.getString(KEY_ID));
+        key.setUse(Use.SIGNATURE);
+        key.setAlg(algorithm);
+        key.setKty(KeyType.fromString(signatureAlgorithm.getFamily().toString()));
+        key.setExp(result.optLong(EXPIRATION_TIME));
+        key.setCrv(signatureAlgorithm.getCurve());
+        key.setN(result.optString(MODULUS));
+        key.setE(result.optString(EXPONENT));
+        key.setX(result.optString(X));
+        key.setY(result.optString(Y));
+
+        JSONArray x5c = result.optJSONArray(CERTIFICATE_CHAIN);
+        key.setX5c(io.jans.as.model.util.StringUtils.toList(x5c));
+
+        jwks.getKeys().add(key);
+
+        //TBD for testing - Start ???
+        strEncryptionAlgorithm = "RSA1_5";
+        //TBD for testing - End ???
         
-            Algorithm  algorithm = Algorithm.fromString(strSignatureAlgorithm);
-            log.debug("\n\n KeyStoreService::generateKeys() - algorithm = "+algorithm);
-            
-            SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.fromString(algorithm.name());
-            log.debug("\n\n KeyStoreService::generateKeys() - signatureAlgorithm = "+signatureAlgorithm);
-            
-            JSONObject result = cryptoProvider.generateKey(algorithm, this.getKeyExpirationTime(), Use.SIGNATURE);
-            log.debug("\n\n KeyStoreService::generateKeys() - result = "+result);
-            
-            JSONWebKey key = new JSONWebKey();
-            key.setKid(result.getString(KEY_ID));
-            key.setUse(Use.SIGNATURE);
-            key.setAlg(algorithm);
-            key.setKty(KeyType.fromString(signatureAlgorithm.getFamily().toString()));
-            key.setExp(result.optLong(EXPIRATION_TIME));
-            key.setCrv(signatureAlgorithm.getCurve());
-            key.setN(result.optString(MODULUS));
-            key.setE(result.optString(EXPONENT));
-            key.setX(result.optString(X));
-            key.setY(result.optString(Y));
+        algorithm = Algorithm.fromString(strEncryptionAlgorithm);
+        log.debug("\n\n KeyStoreService::generateKeys() - algorithm = " + algorithm);
+        KeyEncryptionAlgorithm encryptionAlgorithm = KeyEncryptionAlgorithm.fromName(algorithm.getParamName());
+        //log.debug("\n\n KeyStoreService::generateKeys() - encryptionAlgorithm = " + encryptionAlgorithm);
+        result = cryptoProvider.generateKey(algorithm, this.getKeyExpirationTime(), Use.ENCRYPTION);
 
-            JSONArray x5c = result.optJSONArray(CERTIFICATE_CHAIN);
-            key.setX5c(io.jans.as.model.util.StringUtils.toList(x5c));
+        key = new JSONWebKey();
+        key.setKid(result.getString(KEY_ID));
+        key.setUse(Use.ENCRYPTION);
+        key.setAlg(algorithm);
+        key.setKty(KeyType.fromString(encryptionAlgorithm.getFamily()));
+        key.setExp(result.optLong(EXPIRATION_TIME));
+        key.setN(result.optString(MODULUS));
+        key.setE(result.optString(EXPONENT));
+        key.setX(result.optString(X));
+        key.setY(result.optString(Y));
 
-            jwks.getKeys().add(key);
-            
+        x5c = result.optJSONArray(CERTIFICATE_CHAIN);
+        key.setX5c(io.jans.as.model.util.StringUtils.toList(x5c));
 
-            algorithm = Algorithm.fromString(strEncryptionAlgorithm);
-            log.debug("\n\n KeyStoreService::generateKeys() - algorithm = "+algorithm);
-            KeyEncryptionAlgorithm encryptionAlgorithm = KeyEncryptionAlgorithm.fromName(algorithm.getParamName());
-            log.debug("\n\n KeyStoreService::generateKeys() - encryptionAlgorithm = "+encryptionAlgorithm);
-            result = cryptoProvider.generateKey(algorithm, this.getKeyExpirationTime(), Use.ENCRYPTION);
+        jwks.getKeys().add(key);
 
-            key = new JSONWebKey();
-            key.setKid(result.getString(KEY_ID));
-            key.setUse(Use.ENCRYPTION);
-            key.setAlg(algorithm);
-            key.setKty(KeyType.fromString(encryptionAlgorithm.getFamily()));
-            key.setExp(result.optLong(EXPIRATION_TIME));
-            key.setN(result.optString(MODULUS));
-            key.setE(result.optString(EXPONENT));
-            key.setX(result.optString(X));
-            key.setY(result.optString(Y));
-
-            x5c = result.optJSONArray(CERTIFICATE_CHAIN);
-            key.setX5c(io.jans.as.model.util.StringUtils.toList(x5c));
-
-            jwks.getKeys().add(key);
-        
-    log.debug("\n\n KeyStoreService::generateKeys() - jwks = "+jwks);
+        log.debug("\n\n KeyStoreService::generateKeys() - jwks = " + jwks);
         System.out.println(jwks);
         return jwks;
     }
@@ -620,37 +767,36 @@ public class KeyStoreService {
      * }
      */
     /*
-    public KeyPair getPrivateKey(String strAlgorithm) throws Exception {
-
-        Algorithm algorithm = Algorithm.fromString(strAlgorithm);
-
-        log.debug("\n\n KeyStoreService::generateKey() - algorithm = " + algorithm);
-
-        KeyPairGenerator keyGen = null;
-        SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.fromString(algorithm.getParamName());
-
-        log.debug("\n\n KeyStoreService::getPrivateKey() - algorithm = " + algorithm + " , signatureAlgorithm = "
-                + signatureAlgorithm);
-        if (algorithm == null) {
-            throw new RuntimeException("The signature algorithm parameter cannot be null");
-        } else if (AlgorithmFamily.RSA.equals(algorithm.getFamily())) {
-            keyGen = KeyPairGenerator.getInstance(algorithm.getFamily().toString(), "BC");
-            keyGen.initialize(2048, new SecureRandom());
-        } else if (AlgorithmFamily.EC.equals(algorithm.getFamily())) {
-            ECGenParameterSpec eccgen = new ECGenParameterSpec(signatureAlgorithm.getCurve().getAlias());
-            keyGen = KeyPairGenerator.getInstance(algorithm.getFamily().toString(), "BC");
-            keyGen.initialize(eccgen, new SecureRandom());
-        } else {
-            throw new RuntimeException("The provided signature algorithm parameter is not supported");
-        }
-
-        // Generate the key
-        KeyPair keyPair = keyGen.generateKeyPair();
-
-        log.debug("\n\n KeyStoreService::getPrivateKey() - keyPair = " + keyPair);
-        return keyPair;
-
-    }*/
+     * public KeyPair getPrivateKey(String strAlgorithm) throws Exception {
+     * 
+     * Algorithm algorithm = Algorithm.fromString(strAlgorithm);
+     * 
+     * log.debug("\n\n KeyStoreService::generateKey() - algorithm = " + algorithm);
+     * 
+     * KeyPairGenerator keyGen = null; SignatureAlgorithm signatureAlgorithm =
+     * SignatureAlgorithm.fromString(algorithm.getParamName());
+     * 
+     * log.debug("\n\n KeyStoreService::getPrivateKey() - algorithm = " + algorithm
+     * + " , signatureAlgorithm = " + signatureAlgorithm); if (algorithm == null) {
+     * throw new
+     * RuntimeException("The signature algorithm parameter cannot be null"); } else
+     * if (AlgorithmFamily.RSA.equals(algorithm.getFamily())) { keyGen =
+     * KeyPairGenerator.getInstance(algorithm.getFamily().toString(), "BC");
+     * keyGen.initialize(2048, new SecureRandom()); } else if
+     * (AlgorithmFamily.EC.equals(algorithm.getFamily())) { ECGenParameterSpec
+     * eccgen = new ECGenParameterSpec(signatureAlgorithm.getCurve().getAlias());
+     * keyGen = KeyPairGenerator.getInstance(algorithm.getFamily().toString(),
+     * "BC"); keyGen.initialize(eccgen, new SecureRandom()); } else { throw new
+     * RuntimeException("The provided signature algorithm parameter is not supported"
+     * ); }
+     * 
+     * // Generate the key KeyPair keyPair = keyGen.generateKeyPair();
+     * 
+     * log.debug("\n\n KeyStoreService::getPrivateKey() - keyPair = " + keyPair);
+     * return keyPair;
+     * 
+     * }
+     */
 
     // private X509Certificate[] getX509CertificateChain(KeyPair keyPair, String
     // dnName, Algorithm algorithm,

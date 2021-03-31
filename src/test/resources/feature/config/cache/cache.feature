@@ -3,6 +3,13 @@ Feature: Verify Cache configuration endpoint
 
   	Background:
   	* def mainUrl = cacheUrl
+  	
+    @cache-get-error
+    Scenario: Retrieve Cache configuration without bearer token
+    Given url  mainUrl
+    When method GET
+    Then status 401
+    And print response
   
  	@cache-get
   	Scenario: Retrieve Cache configuration
@@ -97,7 +104,7 @@ Feature: Verify Cache configuration endpoint
     Then status 200
     And print response
     And assert response.length != null
-    And print response.redisConfiguration
+    And print response.memcachedConfiguration
   	Given url  mainUrl
   	And header Authorization = 'Bearer ' + accessToken
     And header Content-Type = 'application/json-patch+json'
@@ -149,7 +156,7 @@ Feature: Verify Cache configuration endpoint
   	And header Authorization = 'Bearer ' + accessToken
     And header Content-Type = 'application/json-patch+json'
     And header Accept = 'application/json'
-    And request "[ {\"op\":\"replace\", \"path\": \"/redisConfiguration/defaultPutExpiration\", \"value\":812 } ]"
+    And request "[ {\"op\":\"replace\", \"path\": \"/redisConfiguration/defaultPutExpiration\", \"value\":"+response.defaultPutExpiration+"} ]"
     And path 'redis'
 	Then print request
     When method PATCH
@@ -197,7 +204,7 @@ Feature: Verify Cache configuration endpoint
   	And header Authorization = 'Bearer ' + accessToken
     And header Content-Type = 'application/json-patch+json'
     And header Accept = 'application/json'
-    And request "[ {\"op\":\"replace\", \"path\": \"/inMemoryConfiguration/defaultPutExpiration\", \"value\":812 } ]"
+    And request "[ {\"op\":\"replace\", \"path\": \"/inMemoryConfiguration/defaultPutExpiration\", \"value\":"+response.defaultPutExpiration+" } ]"
     And path 'in-memory'
 	Then print request
     When method PATCH
@@ -245,7 +252,7 @@ Feature: Verify Cache configuration endpoint
   	And header Authorization = 'Bearer ' + accessToken
     And header Content-Type = 'application/json-patch+json'
     And header Accept = 'application/json'
-    And request "[ {\"op\":\"replace\", \"path\": \"/nativePersistenceConfiguration/defaultPutExpiration\", \"value\":812 } ]"
+    And request "[ {\"op\":\"replace\", \"path\": \"/nativePersistenceConfiguration/defaultPutExpiration\", \"value\":"+response.defaultPutExpiration+"} ]"
     And path 'native-persistence'
 	Then print request
     When method PATCH
@@ -294,7 +301,7 @@ Feature: Verify Cache configuration endpoint
   	And header Authorization = 'Bearer ' + accessToken
     And header Content-Type = 'application/json-patch+json'
     And header Accept = 'application/json'
-    And request "[ {\"op\":\"replace\", \"path\": \"/memcachedConfiguration/defaultPutExpiration\", \"value\":812 } ]"
+    And request "[ {\"op\":\"replace\", \"path\": \"/memcachedConfiguration/defaultPutExpiration\", \"value\":"+response.defaultPutExpiration+"} ]"
     And path 'memcached'
 	Then print request
     When method PATCH

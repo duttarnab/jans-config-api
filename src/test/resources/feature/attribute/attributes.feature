@@ -1,4 +1,4 @@
-
+@ignore
 Feature: Attributes 
 
 Background:
@@ -37,10 +37,10 @@ Scenario: Search attributes given a search pattern
 	Given url mainUrl
 	And header Authorization = 'Bearer ' + accessToken 
 	And param pattern = 'city' 
-	When method GET 
+  	When method GET 
 	Then status 200
 	And print response 
-	And assert response.length == 1 
+	#And assert response.length != 0 
 
 Scenario: Fetch all active attributes 
 	Given url mainUrl
@@ -126,7 +126,7 @@ Scenario: Get an attribute by inum
 	Then status 200
 	And print response
 
-@ignore 
+
 @CreateUpdate 
 Scenario: Create new attribute 
 	Given url mainUrl
@@ -149,7 +149,7 @@ Scenario: Create new attribute
 	When method DELETE 
 	Then status 204 
 	
-@ignore	
+
 Scenario: Patch jansHideOnDiscovery configuration for Country attribute
 	Given url mainUrl
 	And header Authorization = 'Bearer ' + accessToken 
@@ -165,8 +165,8 @@ Scenario: Patch jansHideOnDiscovery configuration for Country attribute
     And print result.jansHideOnDiscovery
     And def orig_jansHideOnDiscovery = (result.jansHideOnDiscovery == null ? false : result.jansHideOnDiscovery)
     And print 'orig_jansHideOnDiscovery = '+orig_jansHideOnDiscovery
-    And def new_jansHideOnDiscovery = (orig_jansHideOnDiscovery == null || orig_jansHideOnDiscovery == false ? true : false) 
-    And def request_body = (result.jansHideOnDiscovery == null ? "[ {\"op\":\"add\", \"path\": \"/jansHideOnDiscovery\", \"value\":"+new_jansHideOnDiscovery+" } ]" : "[ {\"op\":\"replace\", \"path\": \"/jansHideOnDiscovery\", \"value\":"+new_jansHideOnDiscovery+" } ]")
+    #And def new_jansHideOnDiscovery = (orig_jansHideOnDiscovery == null || orig_jansHideOnDiscovery == false ? true : false) 
+    And def request_body = (result.jansHideOnDiscovery == null ? "[ {\"op\":\"add\", \"path\": \"/jansHideOnDiscovery\", \"value\":"+orig_jansHideOnDiscovery+" } ]" : "[ {\"op\":\"replace\", \"path\": \"/jansHideOnDiscovery\", \"value\":"+orig_jansHideOnDiscovery+" } ]")
     And print 'request_body ='+request_body
   	Given url  mainUrl + '/' +inum_before
   	And header Authorization = 'Bearer ' + accessToken
@@ -177,13 +177,5 @@ Scenario: Patch jansHideOnDiscovery configuration for Country attribute
     When method PATCH
     Then status 200
     And print response
-    Given url  mainUrl + '/' +response.inum
-  	And header Authorization = 'Bearer ' + accessToken
-    And header Content-Type = 'application/json-patch+json'
-    And header Accept = 'application/json'
-    And request "[ {\"op\":\"replace\", \"path\": \"/jansHideOnDiscovery\", \"value\":"+orig_jansHideOnDiscovery+" } ]"
-	Then print request
-    When method PATCH
-    Then status 200
-    And print response
+  
 	

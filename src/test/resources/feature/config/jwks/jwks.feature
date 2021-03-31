@@ -3,6 +3,13 @@ Feature: JWKS endpoint
 
 	Background:
   	* def mainUrl = jwksUrl
+  	
+  Scenario: Retrieve JWKS without bearer token
+    Given url  mainUrl
+    When method GET
+    Then status 401
+    And print response
+
 
   Scenario: Retrieve JWKS
     Given url  mainUrl
@@ -12,37 +19,11 @@ Feature: JWKS endpoint
     And print response
     And assert response.length != null
     
-  Scenario: Post JWKS
-    Given url  mainUrl
-    And header Authorization = 'Bearer ' + accessToken
-    And request param { format: 'PEM' , alias:'8' , key: read('key.pem') }
-    And print request
-    When method POST
-    Then status 200
-    And print response
-    And assert response.length != null
-    
-  @ignore  
     Scenario: Post JWKS
     Given url  mainUrl
     And header Authorization = 'Bearer ' + accessToken
-    When method GET
-    Then status 200
-    Then print response
-    Then def first_response = response 
-    Given url  mainUrl
-    And header Authorization = 'Bearer ' + accessToken
-    And request first_response 
-    When method POST
-    Then status 200
-    And print response
-    And assert response.length != null
-    
-@ignore
-  Scenario: Import JWKS
-    Given url  mainUrl
-    And header Authorization = 'Bearer ' + accessToken
-    And request read('jwk-post.json')
+    And request read('pem-cert.json')
+    And print request
     When method POST
     Then status 200
     And print response
