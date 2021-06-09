@@ -35,7 +35,6 @@ import org.slf4j.Logger;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class JwksResource extends BaseResource {
-    
     @Inject
     Logger log;
 
@@ -70,7 +69,6 @@ public class JwksResource extends BaseResource {
     @Consumes(MediaType.APPLICATION_JSON_PATCH_JSON)
     @ProtectedApi(scopes = { ApiAccessConstants.JWKS_WRITE_ACCESS })
     public Response patch(String requestString) throws JsonPatchException, IOException {
-        log.debug("JWKS details to be patched - requestString = "+requestString);
         final Conf conf = configurationService.findConf();
         WebKeysConfiguration webKeys = conf.getWebKeys();
         webKeys = Jackson.applyPatch(requestString, webKeys);
@@ -83,7 +81,7 @@ public class JwksResource extends BaseResource {
     @POST
     @ProtectedApi(scopes = { ApiAccessConstants.JWKS_WRITE_ACCESS })
     @Path(ApiConstants.KEY_PATH)
-    public Response addKeyById(@NotNull JSONWebKey jwk) {
+    public Response getKeyById(@NotNull JSONWebKey jwk) {
         log.debug("Add a new Key to the JWKS = "+jwk); 
         Conf conf = configurationService.findConf();
         WebKeysConfiguration webkeys = configurationService.findConf().getWebKeys();
@@ -119,7 +117,7 @@ public class JwksResource extends BaseResource {
     @Consumes(MediaType.APPLICATION_JSON_PATCH_JSON)
     @ProtectedApi(scopes = { ApiAccessConstants.JWKS_WRITE_ACCESS })
     @Path(ApiConstants.KID_PATH)
-    public Response patchKeyById(@PathParam(ApiConstants.KID) @NotNull String kid, @NotNull String requestString) throws JsonPatchException, IOException {
+    public Response patch(@PathParam(ApiConstants.KID) @NotNull String kid, @NotNull String requestString) throws JsonPatchException, IOException {
         log.debug("JWKS details to be patched for kid = "+kid+" ,requestString = "+requestString);
         Conf conf = configurationService.findConf();
         WebKeysConfiguration webkeys = configurationService.findConf().getWebKeys();
@@ -169,6 +167,7 @@ public class JwksResource extends BaseResource {
         }
         return null;
     }
+
 
     private final String certStr = "-----BEGIN CERTIFICATE-----\n"
             + "MIIECTCCAvGgAwIBAgIUZ3VzPuFqXNxussiXQIJ+aygf8EIwDQYJKoZIhvcNAQEL\n"

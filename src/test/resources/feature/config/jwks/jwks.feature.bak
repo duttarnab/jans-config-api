@@ -63,8 +63,7 @@ Feature: JWKS endpoint
     Then status 200
     And print response
     And assert response.length != null
-
-@ignore  
+    
   Scenario: POST, GET, PATCH and selete a Key
     #Given url mainUrl + '/test12345-66f1-4b4a-92ec-d969522f4cbc_sig_rs256'
     #And header Authorization = 'Bearer ' + accessToken

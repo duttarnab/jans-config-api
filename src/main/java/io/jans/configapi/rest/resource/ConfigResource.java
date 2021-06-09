@@ -37,6 +37,7 @@ public class ConfigResource extends BaseResource {
     @ProtectedApi(scopes = { ApiAccessConstants.JANS_AUTH_CONFIG_READ_ACCESS })
     public Response getAppConfiguration() {
         AppConfiguration appConfiguration = configurationService.find();
+        log.debug("ConfigResource::getAppConfiguration() appConfiguration - "+appConfiguration);
         return Response.ok(appConfiguration).build();
     }
 
@@ -46,11 +47,15 @@ public class ConfigResource extends BaseResource {
     public Response patchAppConfigurationProperty(@NotNull String requestString) throws Exception {
         log.debug("AUTH CONF details to patch - requestString = "+requestString);
         Conf conf = configurationService.findConf();
-        AppConfiguration appConfiguration = Jackson.applyPatch(requestString, conf.getDynamic());
+        AppConfiguration appConfiguration = configurationService.find();
+        log.debug("AUTH CONF details BEFORE patch - appConfiguration = "+appConfiguration);
+        appConfiguration = Jackson.applyPatch(requestString, conf.getDynamic());
+        log.debug("AUTH CONF details BEFORE patch merge - appConfiguration = "+appConfiguration);
         conf.setDynamic(appConfiguration);
 
         configurationService.merge(conf);
         appConfiguration = configurationService.find();
+        log.debug("AUTH CONF details AFTER patch merge - appConfiguration = "+appConfiguration);
         return Response.ok(appConfiguration).build();
     }
 }

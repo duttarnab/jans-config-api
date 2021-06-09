@@ -86,7 +86,7 @@ Feature: Verify Auth configuration endpoint
     Then status 200
     And print response
     
-    
+    @ignore
     @auth-config-cleanServiceBaseDns-patch
   	Scenario: Patch cleanServiceBaseDns Auth configuration  	
   	Given url  mainUrl
@@ -120,8 +120,7 @@ Feature: Verify Auth configuration endpoint
     And header Authorization = 'Bearer ' + accessToken
     And header Content-Type = 'application/json-patch+json'
     And header Accept = 'application/json'
-    #And request "[ {\"op\":\"replace\", \"path\": \"/statEnabled\", \"value\": \"true\" },{\"op\":\"replace\", \"path\": \"/statTimerIntervalInSeconds\", \"value\": \"200\" },{\"op\":\"replace\", \"path\": \"/statWebServiceIntervalLimitInSeconds\", \"value\": \"800\" }  ]"
-    And request "[ {\"op\":\"replace\", \"path\": \"/statEnabled\", \"value\": "+response.statEnabled+" },{\"op\":\"replace\", \"path\": \"/statTimerIntervalInSeconds\", \"value\": "+response.statTimerIntervalInSeconds+" },{\"op\":\"replace\", \"path\": \"/statWebServiceIntervalLimitInSeconds\", \"value\": "+response.statWebServiceIntervalLimitInSeconds+" }  ]"
+    And request "[ {\"op\":\"replace\", \"path\": \"/statTimerIntervalInSeconds\", \"value\": "+response.statTimerIntervalInSeconds+" },{\"op\":\"replace\", \"path\": \"/statWebServiceIntervalLimitInSeconds\", \"value\": "+response.statWebServiceIntervalLimitInSeconds+" }  ]"
     Then print request
     When method PATCH
     Then status 200
@@ -146,26 +145,7 @@ Feature: Verify Auth configuration endpoint
     Then status 200
     And print response
     
-
-    @auth-config-patch
-  	Scenario: Patch cibaEnabled Auth configuration
-  	Given url  mainUrl
-    And  header Authorization = 'Bearer ' + accessToken
-    When method GET
-    Then status 200
-    And print response
-    And assert response.length != null
-  	Given url  mainUrl
-    And header Authorization = 'Bearer ' + accessToken
-    And header Content-Type = 'application/json-patch+json'
-    And header Accept = 'application/json'
- 	And request "[ {\"op\":\"replace\", \"path\": \"/cibaEnabled\", \"value\":"+response.cibaEnabled+" } ]"
-	Then print request
-    When method PATCH
-    Then status 200
-    And print response
-    
-    
+  
     @auth-config-patch
   	Scenario: Patch clientBlackList Auth configuration
   	Given url  mainUrl
@@ -285,7 +265,7 @@ Feature: Verify Auth configuration endpoint
     And header Authorization = 'Bearer ' + accessToken
     And header Content-Type = 'application/json-patch+json'
     And header Accept = 'application/json'
-    And def request_body = (response.dcrSignatureValidationSharedSecret  == null ? "[ {\"op\":\"add\", \"path\": \"/dcrSignatureValidationSharedSecret\", \"value\":null } ]" : "[ {\"op\":\"replace\", \"path\": \"/dcrSignatureValidationSharedSecret\", \"value\":"+response.dcrSignatureValidationSharedSecret+"} ]")
+    And def request_body = (response.dcrSignatureValidationSharedSecret  == null ? "[ {\"op\":\"add\", \"path\": \"/dcrSignatureValidationSharedSecret\", \"value\":null } ]" : "[ {\"op\":\"replace\", \"path\": \"/dcrSignatureValidationSharedSecret\", \"value\":\""+response.dcrSignatureValidationSharedSecret+"\" } ]")
     And print 'request_body ='+request_body
     And request request_body
     When method PATCH
@@ -345,7 +325,7 @@ Feature: Verify Auth configuration endpoint
     And header Authorization = 'Bearer ' + accessToken
     And header Content-Type = 'application/json-patch+json'
     And header Accept = 'application/json'
-     And def request_body = (response.keySignWithSameKeyButDiffAlg == null ? "[ {\"op\":\"add\", \"path\": \"/keySignWithSameKeyButDiffAlg\", \"value\":null } ]" : "[ {\"op\":\"replace\", \"path\": \"/keySignWithSameKeyButDiffAlg\", \"value\":"+response.keySignWithSameKeyButDiffAlg+"} ]")
+    And def request_body = (response.keySignWithSameKeyButDiffAlg == null ? "[ {\"op\":\"add\", \"path\": \"/keySignWithSameKeyButDiffAlg\", \"value\":null } ]" : "[ {\"op\":\"replace\", \"path\": \"/keySignWithSameKeyButDiffAlg\", \"value\":"+response.keySignWithSameKeyButDiffAlg+"} ]")
     And print 'request_body ='+request_body
     And request request_body
     When method PATCH
@@ -353,5 +333,23 @@ Feature: Verify Auth configuration endpoint
     And print response
     
     
+    @auth-config-patch-staticKid
+    Scenario: Patch staticKid Auth configuration
+    Given url  mainUrl
+    And  header Authorization = 'Bearer ' + accessToken
+    When method GET
+    Then status 200
+    And print response
+    And assert response.length != null
+    Given url  mainUrl
+    And header Authorization = 'Bearer ' + accessToken
+    And header Content-Type = 'application/json-patch+json'
+    And header Accept = 'application/json'
+    And def request_body = (response.staticKid == null ? "[ {\"op\":\"add\", \"path\": \"/staticKid\", \"value\":null } ]" : "[ {\"op\":\"replace\", \"path\": \"/staticKid\", \"value\":\""+response.staticKid+"\"} ]")
+    And print 'request_body ='+request_body
+    And request request_body
+    When method PATCH
+    Then status 200
+    And print response
     
     
