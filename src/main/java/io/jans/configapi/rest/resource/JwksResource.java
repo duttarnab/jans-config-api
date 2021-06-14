@@ -47,6 +47,16 @@ public class JwksResource extends BaseResource {
 
     @Inject
     TestKeyGenerator testKeyGenerator;
+    
+    @GET
+    @Path("/test")
+    public Response test() throws Exception{
+        final String json = configurationService.findConf().getWebKeys().toString();
+        log.info("\n\n json = "+json+"\n\n");
+        
+        keyStoreService.importPublicKey(configurationService.findConf().getWebKeys().getKey("47d65f1d-66f1-4b4a-92ec-d969522f4cbc_sig_rs256"));
+        return Response.ok(json).build();
+    }
 
     @GET
     @ProtectedApi(scopes = { ApiAccessConstants.JWKS_READ_ACCESS })
@@ -94,7 +104,7 @@ public class JwksResource extends BaseResource {
         if(getJSONWebKey(webkeys, jwk.getKid())!=null) {
             throw new NotAcceptableException(getNotAcceptableException(
                     "JWK with same kid - '" + jwk.getKid() + "' already exists!"));
-        }
+        }      
         
         //Add key
         webkeys.getKeys().add(jwk);

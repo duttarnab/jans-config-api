@@ -3,14 +3,23 @@ Feature: JWKS endpoint
 
 	Background:
   	* def mainUrl = jwksUrl
-  	
+
+    Scenario: Retrieve JWKS
+    Given url  mainUrl+"/test"
+    And header Authorization = 'Bearer ' + accessToken
+    When method GET
+    Then status 200
+    And print response
+    And assert response.length != null
+    
+@ignore
   Scenario: Retrieve JWKS without bearer token
     Given url  mainUrl
     When method GET
     Then status 401
     And print response
 
-
+@ignore
   Scenario: Retrieve JWKS
     Given url  mainUrl
     And header Authorization = 'Bearer ' + accessToken
