@@ -17,8 +17,18 @@
 
     <packaging>pom</packaging>
 
+    <repositories>
+        <repository>
+            <id>gluu</id>
+            <name>Gluu repository</name>
+            <url>https://maven.gluu.org/maven</url>
+        </repository>
+    </repositories>
+
     <modules>
         <module>admin-ui-plugin</module>
         <module>scim-plugin</module>
+        <module>casa-config-api</module>
     </modules>
+
 </project>
