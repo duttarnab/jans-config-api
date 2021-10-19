@@ -7,7 +7,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-@Path("/admin-ui/logging")
+@Path("/sample/plugin")
 public class HelloWorldResource {
     static final String SAY_HELLO = "/hello";
 
