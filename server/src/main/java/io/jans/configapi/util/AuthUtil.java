@@ -63,6 +63,10 @@ public class AuthUtil {
         return this.configurationFactory.getApiAppConfiguration().getAuthOpenidConfigurationUrl();
     }
     
+    public boolean isConfigInterceptionEnabled() {
+        return this.configurationFactory.getApiAppConfiguration().isConfigInterceptionEnabled();
+    }
+    
     public String getIssuer() {
         return this.configurationService.find().getIssuer();
     }

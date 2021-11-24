@@ -12,15 +12,19 @@ import io.jans.configapi.security.service.AuthorizationService;
 import io.jans.configapi.security.service.OpenIdAuthorizationService;
 import io.jans.exception.ConfigurationException;
 import io.jans.exception.OxIntializationException;
+import io.jans.model.custom.script.CustomScriptType;
 import io.jans.orm.PersistenceEntryManager;
 import io.jans.orm.PersistenceEntryManagerFactory;
 import io.jans.orm.service.PersistanceFactoryService;
 import io.jans.service.cdi.event.LdapConfigurationReload;
 import io.jans.service.cdi.util.CdiUtil;
+import io.jans.service.custom.script.CustomScriptManager;
 import io.jans.service.timer.QuartzSchedulerManager;
 import io.jans.util.StringHelper;
-import org.jboss.resteasy.plugins.server.servlet.ResteasyContextParameters;
-import org.slf4j.Logger;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.BeforeDestroyed;
@@ -36,6 +40,8 @@ import javax.servlet.ServletContext;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.plugins.providers.RegisterBuiltin;
 import org.jboss.resteasy.plugins.providers.jackson.ResteasyJackson2Provider;
+import org.jboss.resteasy.plugins.server.servlet.ResteasyContextParameters;
+import org.slf4j.Logger;
 
 @ApplicationScoped
 @Named("appInitializer")
@@ -63,9 +69,11 @@ public class AppInitializer {
     @Inject
     private Instance<AuthorizationService> authorizationServiceInstance;
 
-
     @Inject
     private QuartzSchedulerManager quartzSchedulerManager;
+
+    @Inject
+    private CustomScriptManager customScriptManager;
 
     public void onStart(@Observes @Initialized(ApplicationScoped.class) Object init) {
         log.info("========================== Initializing - App =======================================");
@@ -81,6 +89,9 @@ public class AppInitializer {
         ResteasyProviderFactory instance = ResteasyProviderFactory.getInstance();
         RegisterBuiltin.register(instance);
         instance.registerProvider(ResteasyJackson2Provider.class);
+
+        // CustomScript
+        initCustomScripts();
 
         log.info("==============  APPLICATION IS UP AND RUNNING ===================");
         log.info("========================== App - Initialized =======================================");
@@ -160,5 +171,13 @@ public class AppInitializer {
             this.log.warn("Suspending Quartz Scheduler Service...");
             quartzSchedulerManager.standby();
         }
+    }
+
+    private void initCustomScripts() {
+        List<CustomScriptType> supportedCustomScriptTypes = new ArrayList<>();
+        supportedCustomScriptTypes.add(CustomScriptType.CONFIG_API);
+        customScriptManager
+                .initTimer(Arrays.asList(CustomScriptType.CONFIG_API, CustomScriptType.PERSISTENCE_EXTENSION));
+        log.info("Initialized Custom Scripts!");
     }
 }
