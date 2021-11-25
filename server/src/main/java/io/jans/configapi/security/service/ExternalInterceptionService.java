@@ -7,17 +7,16 @@
 package io.jans.configapi.security.service;
 
 import io.jans.configapi.external.service.ExternalConfigService;
+import io.jans.configapi.model.configuration.ApiAppConfiguration;
 import io.jans.configapi.util.AuthUtil;
 
 import java.io.Serializable;
-import java.util.List;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Named;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.container.ResourceInfo;
+import javax.servlet.http.HttpServletResponse;
 import javax.inject.Inject;
 
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 
 @ApplicationScoped
@@ -36,12 +35,12 @@ public class ExternalInterceptionService implements Serializable {
     AuthUtil AuthUtil;
 
 
-    public boolean authenticate(String token, String issuer, ResourceInfo resourceInfo, String method,
+    public boolean authorization(HttpServletRequest request, HttpServletResponse response, ApiAppConfiguration apiAppConfiguration, String token, String issuer, String method,
             String path) throws Exception {
-        log.debug("Authenticate script params -  token:{}, issuer:{}, resourceInfo:{}, method:{}, path:{} ", token, issuer, resourceInfo, method, path);
+        log.error("ExternalInterceptionService - Authorization script params -  request:{}, response:{}, apiAppConfiguration:{}, token:{}, issuer:{}, method:{}, path:{} ", request, response, apiAppConfiguration, token, issuer, method, path);
         
        if(externalConfigService.isEnabled()) {
-           return externalConfigService.executeAuthenticate(token, issuer, resourceInfo, method, path); //TODO
+           return externalConfigService.checkAuthorization(request, response, apiAppConfiguration, token, issuer,  method, path); 
        }
        
        return false;

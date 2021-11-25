@@ -7,16 +7,15 @@
 package io.jans.configapi.external.service;
 
 import io.jans.configapi.external.context.ConfigAuthContext;
-import io.jans.model.SimpleCustomProperty;
+import io.jans.configapi.model.configuration.ApiAppConfiguration;
 import io.jans.model.custom.script.CustomScriptType;
 import io.jans.model.custom.script.conf.CustomScriptConfiguration;
 import io.jans.model.custom.script.type.configapi.ConfigApiType;
 import io.jans.service.custom.script.ExternalScriptService;
 
-import java.util.HashMap;
-import java.util.Map;
 import javax.enterprise.context.ApplicationScoped;
-import javax.ws.rs.container.ResourceInfo;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -45,15 +44,15 @@ public class ExternalConfigService extends ExternalScriptService {
         saveScriptError(customScriptConfiguration.getCustomScript(), e);        
     }
 
-    public boolean executeAuthenticate(String token, String issuer, ResourceInfo resourceInfo, String method,
+    public boolean checkAuthorization(HttpServletRequest request, HttpServletResponse response, ApiAppConfiguration apiAppConfiguration, String token, String issuer, String method,
             String path) {
-        log.error("Authenticate script params -  token:{}, issuer:{}, resourceInfo:{}, method:{}, path:{} ", token, issuer, resourceInfo, method, path);
+        log.error("External Config Authorization script params -  request:{}, response:{}, apiAppConfiguration:{}, token:{}, issuer:{}, method:{}, path:{} ", request, response, apiAppConfiguration, token, issuer, method, path);
         boolean result = true;
         for (CustomScriptConfiguration customScriptConfiguration : this.customScriptConfigurations) {
             if (customScriptConfiguration.getExternalType().getApiVersion() > 1) {
                 ConfigApiType externalType = (ConfigApiType) customScriptConfiguration.getExternalType();            
-                ConfigAuthContext context = new ConfigAuthContext(null,token, issuer, resourceInfo, method, path,null); //TODOs
-                result &= externalType.authenticate(context);
+                ConfigAuthContext context = new ConfigAuthContext(request, response, apiAppConfiguration, token, issuer, method, path, customScriptConfiguration);
+                result &= externalType.authorize(context);
                 
                 if (!result) {
                     return result;

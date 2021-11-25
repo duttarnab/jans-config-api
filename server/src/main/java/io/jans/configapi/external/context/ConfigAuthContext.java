@@ -6,6 +6,7 @@
 
 package io.jans.configapi.external.context;
 
+import io.jans.configapi.model.configuration.ApiAppConfiguration;
 import io.jans.configapi.util.ApiConstants;
 import io.jans.model.SimpleCustomProperty;
 import io.jans.model.custom.script.conf.CustomScriptConfiguration;
@@ -15,7 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.container.ResourceInfo;
+import javax.servlet.http.HttpServletResponse;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,30 +24,38 @@ public class ConfigAuthContext extends ExternalScriptContext {
 
     private static final Logger log = LoggerFactory.getLogger(ConfigAuthContext.class);
 
+    private ApiAppConfiguration apiAppConfiguration;
     private CustomScriptConfiguration script;
     private String token;
     private String issuer;
-    private ResourceInfo resourceInfo;
     private String method;
     private String path;
     private final Map<String, SimpleCustomProperty> configurationAttributes;
 
-    public ConfigAuthContext(HttpServletRequest httpRequest, String token, String issuer, ResourceInfo resourceInfo,
-            String method, String path, CustomScriptConfiguration script) {
-        this(httpRequest, token, issuer, resourceInfo, method, path, script, null);
+    public ConfigAuthContext(HttpServletRequest httpRequest, HttpServletResponse httpResponse, ApiAppConfiguration apiAppConfiguration, String token,
+            String issuer, String method, String path, CustomScriptConfiguration script) {
+        this(httpRequest, httpResponse, apiAppConfiguration, token, issuer, method, path, script, null);
     }
 
-    public ConfigAuthContext(HttpServletRequest httpRequest, String token, String issuer, ResourceInfo resourceInfo,
-            String method, String path, CustomScriptConfiguration script,
+    public ConfigAuthContext(HttpServletRequest httpRequest, HttpServletResponse httpResponse, ApiAppConfiguration apiAppConfiguration, String token,
+            String issuer, String method, String path, CustomScriptConfiguration script,
             Map<String, SimpleCustomProperty> configurationAttributes) {
-        super(httpRequest);
+        super(httpRequest,httpResponse);
+        this.apiAppConfiguration = apiAppConfiguration;
         this.token = token;
         this.issuer = issuer;
-        this.resourceInfo = resourceInfo;
         this.method = method;
         this.path = path;
         this.script = script;
         this.configurationAttributes = configurationAttributes;
+    }
+
+    public ApiAppConfiguration getApiAppConfiguration() {
+        return apiAppConfiguration;
+    }
+
+    public void setApiAppConfiguration(ApiAppConfiguration apiAppConfiguration) {
+        this.apiAppConfiguration = apiAppConfiguration;
     }
 
     public CustomScriptConfiguration getScript() {
@@ -71,14 +80,6 @@ public class ConfigAuthContext extends ExternalScriptContext {
 
     public void setIssuer(String issuer) {
         this.issuer = issuer;
-    }
-
-    public ResourceInfo getResourceInfo() {
-        return resourceInfo;
-    }
-
-    public void setResourceInfo(ResourceInfo resourceInfo) {
-        this.resourceInfo = resourceInfo;
     }
 
     public String getMethod() {
@@ -117,9 +118,9 @@ public class ConfigAuthContext extends ExternalScriptContext {
 
     @Override
     public String toString() {
-        return "ConfigAuthContext [script=" + script + ", token=" + token + ", issuer=" + issuer + ", resourceInfo="
-                + resourceInfo + ", method=" + method + ", path=" + path + ", configurationAttributes="
-                + configurationAttributes + "]";
+        return "ConfigAuthContext [apiAppConfiguration=" + apiAppConfiguration + ", script=" + script + ", token="
+                + token + ", issuer=" + issuer + ", method=" + method + ", path="
+                + path + ", configurationAttributes=" + configurationAttributes + "]";
     }
 
 }

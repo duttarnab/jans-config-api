@@ -6,12 +6,16 @@
 
 package io.jans.configapi.filters;
 
+import io.jans.configapi.configuration.ConfigurationFactory;
+import io.jans.configapi.security.service.ExternalInterceptionService;
+import io.jans.configapi.model.configuration.ApiAppConfiguration;
 import io.jans.configapi.security.service.AuthorizationService;
 import io.jans.configapi.util.ApiConstants;
 
 import javax.annotation.Priority;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
@@ -52,6 +56,12 @@ public class AuthorizationFilter implements ContainerRequestFilter {
 
     @Inject
     AuthorizationService authorizationService;
+    
+    @Inject
+    ConfigurationFactory configurationFactory;
+    
+    @Inject 
+    ExternalInterceptionService externalInterceptionService;
 
     @SuppressWarnings({ "all" })
     public void filter(ContainerRequestContext context) {
@@ -105,6 +115,12 @@ public class AuthorizationFilter implements ContainerRequestFilter {
     private void abortWithUnauthorized(ContainerRequestContext requestContext) {
         requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED)
                 .header(HttpHeaders.WWW_AUTHENTICATE, AUTHENTICATION_SCHEME).build());
+    }
+    
+     private boolean isAuthorized(HttpServletRequest request, HttpServletResponse response, String token, String issuer, String method,
+                String path) throws Exception {
+            log.error("Authorization script params -  request:{}, response:{}, token:{}, issuer:{}, method:{}, path:{} ", request, response, token, issuer, method, path);
+        return externalInterceptionService.authorization(request, response, this.configurationFactory.getApiAppConfiguration(), token, issuer, method, path);
     }
 
 }
