@@ -88,7 +88,7 @@ public class AttributesResource extends BaseResource {
     @POST
     @ProtectedApi(scopes = { ApiAccessConstants.ATTRIBUTES_WRITE_ACCESS })
     public Response createAttribute(@Valid GluuAttribute attribute) {
-        log.debug(" GluuAttribute details to add - attribute = " + attribute);
+        log.error(" GluuAttribute details to add - attribute = " + attribute);
         checkNotNull(attribute.getName(), AttributeNames.NAME);
         checkNotNull(attribute.getDisplayName(), AttributeNames.DISPLAY_NAME);
         checkResourceNotNull(attribute.getDataType(), AttributeNames.DATA_TYPE);
@@ -103,7 +103,7 @@ public class AttributesResource extends BaseResource {
     @PUT
     @ProtectedApi(scopes = { ApiAccessConstants.ATTRIBUTES_WRITE_ACCESS })
     public Response updateAttribute(@Valid GluuAttribute attribute) {
-        log.debug(" GluuAttribute details to update - attribute = " + attribute);
+        log.error(" GluuAttribute details to update - 1 - attribute = " + attribute);
         String inum = attribute.getInum();
         checkResourceNotNull(inum, GLUU_ATTRIBUTE);
         checkNotNull(attribute.getName(), AttributeNames.NAME);
@@ -114,7 +114,9 @@ public class AttributesResource extends BaseResource {
         attribute.setInum(existingAttribute.getInum());
         attribute.setBaseDn(attributeService.getDnForAttribute(inum));
         attributeService.updateAttribute(attribute);
+        log.error(" GluuAttribute details to update - 2 - attribute = " + attribute);
         GluuAttribute result = attributeService.getAttributeByInum(inum);
+        log.error(" GluuAttribute post update - result = " + result);
         return Response.ok(result).build();
     }
 
