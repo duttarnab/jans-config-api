@@ -47,6 +47,9 @@ public class AuthorizationFilter implements ContainerRequestFilter {
 
     @Context
     HttpServletRequest request;
+    
+    @Context
+    HttpServletResponse httpServletResponse;
 
     @Context
     private HttpHeaders httpHeaders;
@@ -65,15 +68,15 @@ public class AuthorizationFilter implements ContainerRequestFilter {
 
     @SuppressWarnings({ "all" })
     public void filter(ContainerRequestContext context) {
-        log.info("=======================================================================");
-        log.info("====== context = " + context + " , info.getAbsolutePath() = " + info.getAbsolutePath()
-                + " , info.getRequestUri() = " + info.getRequestUri() + "\n\n");
-        log.info("====== info.getBaseUri()=" + info.getBaseUri() + " info.getPath()=" + info.getPath()
+        log.error("=======================================================================");
+        log.error("====== context = " + context + " , info.getAbsolutePath() = " + info.getAbsolutePath()
+                + " , info.getRequestUri() = " + info.getRequestUri() + " , httpServletResponse = "+httpServletResponse+"\n\n");
+        log.error("====== info.getBaseUri()=" + info.getBaseUri() + " info.getPath()=" + info.getPath()
                 + " info.toString()=" + info.toString());
-        log.info("====== request.getContextPath()=" + request.getContextPath() + " request.getRequestURI()="
+        log.error("====== request.getContextPath()=" + request.getContextPath() + " request.getRequestURI()="
                 + request.getRequestURI() + " request.toString() " + request.toString());
-        log.info("======" + context.getMethod() + " " + info.getPath() + " FROM IP " + request.getRemoteAddr());
-        log.info("======PERFORMING AUTHORIZATION=========================================");
+        log.error("======" + context.getMethod() + " " + info.getPath() + " FROM IP " + request.getRemoteAddr());
+        log.error("======PERFORMING AUTHORIZATION=========================================");
         String authorizationHeader = context.getHeaderString(HttpHeaders.AUTHORIZATION);
         String issuer = context.getHeaderString(ApiConstants.ISSUER);
         boolean configOauthEnabled = authorizationService.isConfigOauthEnabled();
@@ -99,6 +102,12 @@ public class AuthorizationFilter implements ContainerRequestFilter {
                 context.getHeaders().remove(HttpHeaders.AUTHORIZATION);
                 context.getHeaders().add(HttpHeaders.AUTHORIZATION, authorizationHeader);
             }
+            
+            //Authenticate
+            
+            boolean authorized = isAuthorized(request, httpServletResponse, authorizationHeader, issuer,  context.getMethod(), info.getPath());
+            log.error("\n\n\n AuthorizationFilter::filter() - authorized = "+authorized);
+            
             log.info("======AUTHORIZATION  GRANTED===========================================");
         } catch (Exception ex) {
             log.error("======AUTHORIZATION  FAILED ===========================================", ex);

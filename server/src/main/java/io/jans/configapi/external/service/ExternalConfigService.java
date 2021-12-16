@@ -53,7 +53,7 @@ public class ExternalConfigService extends ExternalScriptService {
                 ConfigApiType externalType = (ConfigApiType) customScriptConfiguration.getExternalType();            
                 ConfigAuthContext context = new ConfigAuthContext(request, response, apiAppConfiguration, token, issuer, method, path, customScriptConfiguration);
                 result &= externalType.authorize(context);
-                
+                log.error("External Config Authorization  - result = "+result);
                 if (!result) {
                     return result;
                 }

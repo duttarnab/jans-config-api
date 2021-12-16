@@ -10,6 +10,7 @@ import io.jans.as.common.service.common.ApplicationFactory;
 import io.jans.configapi.security.api.ApiProtectionService;
 import io.jans.configapi.security.service.AuthorizationService;
 import io.jans.configapi.security.service.OpenIdAuthorizationService;
+import io.jans.configapi.service.logger.LoggerService;
 import io.jans.exception.ConfigurationException;
 import io.jans.exception.OxIntializationException;
 import io.jans.model.custom.script.CustomScriptType;
@@ -68,6 +69,9 @@ public class AppInitializer {
 
     @Inject
     private Instance<AuthorizationService> authorizationServiceInstance;
+    
+    @Inject
+    private LoggerService loggerService;
 
     @Inject
     private QuartzSchedulerManager quartzSchedulerManager;
@@ -78,6 +82,10 @@ public class AppInitializer {
     public void onStart(@Observes @Initialized(ApplicationScoped.class) Object init) {
         log.info("========================== Initializing - App =======================================");
         log.info("=============  STARTING API APPLICATION  ========================");
+        
+        // Schedule timer tasks
+        loggerService.initTimer();
+        
         System.setProperty(ResteasyContextParameters.RESTEASY_PATCH_FILTER_DISABLED, "true");
         this.configurationFactory.create();
         persistenceEntryManagerInstance.get();
@@ -139,6 +147,7 @@ public class AppInitializer {
                     configurationFactory.getApiClientId());
             return authorizationServiceInstance.select(OpenIdAuthorizationService.class).get();
         } catch (Exception ex) {
+            log.error("Failed to create AuthorizationService instance", ex);
             throw new ConfigurationException("Failed to create AuthorizationService instance", ex);
         }
     }
