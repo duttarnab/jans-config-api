@@ -83,9 +83,6 @@ public class AppInitializer {
         log.info("========================== Initializing - App =======================================");
         log.info("=============  STARTING API APPLICATION  ========================");
         
-        // Schedule timer tasks
-        loggerService.initTimer();
-        
         System.setProperty(ResteasyContextParameters.RESTEASY_PATCH_FILTER_DISABLED, "true");
         this.configurationFactory.create();
         persistenceEntryManagerInstance.get();
@@ -100,6 +97,9 @@ public class AppInitializer {
 
         // CustomScript
         initCustomScripts();
+        
+        configurationFactory.initTimer();
+        loggerService.initTimer();
 
         log.info("==============  APPLICATION IS UP AND RUNNING ===================");
         log.info("========================== App - Initialized =======================================");
@@ -173,6 +173,7 @@ public class AppInitializer {
     }
 
     protected void initSchedulerService() {
+        log.info("\n\n initSchedulerService() - Entry \n\n");
         quartzSchedulerManager.start();
 
         String disableScheduler = System.getProperties().getProperty("gluu.disable.scheduler");
@@ -183,6 +184,7 @@ public class AppInitializer {
     }
 
     private void initCustomScripts() {
+        log.info("\n\n initCustomScripts() - Entry \n\n");
         List<CustomScriptType> supportedCustomScriptTypes = new ArrayList<>();
         supportedCustomScriptTypes.add(CustomScriptType.CONFIG_API);
         customScriptManager

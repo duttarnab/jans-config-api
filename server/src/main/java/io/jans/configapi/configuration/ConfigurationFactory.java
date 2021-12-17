@@ -24,6 +24,12 @@ import io.jans.orm.exception.BasePersistenceException;
 import io.jans.orm.model.PersistenceConfiguration;
 import io.jans.orm.service.PersistanceFactoryService;
 import io.jans.orm.util.properties.FileConfiguration;
+import io.jans.service.cdi.event.ConfigurationEvent;
+import io.jans.service.cdi.event.ConfigurationUpdate;
+import io.jans.service.cdi.event.LdapConfigurationReload;
+import io.jans.service.cdi.event.Scheduled;
+import io.jans.service.timer.event.TimerEvent;
+import io.jans.service.timer.schedule.TimerSchedule;
 import io.jans.util.StringHelper;
 import io.jans.util.security.PropertiesDecrypter;
 import io.jans.util.security.StringEncrypter;
@@ -32,6 +38,7 @@ import org.slf4j.Logger;
 
 import javax.annotation.Priority;
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.event.Event;
 import javax.enterprise.inject.Alternative;
 import javax.enterprise.inject.Instance;
 import javax.enterprise.inject.Produces;
@@ -77,7 +84,17 @@ public class ConfigurationFactory {
 
     @Inject
     private PersistanceFactoryService persistanceFactoryService;
+    
+    @Inject
+    private Event<TimerEvent> timerEvent;
 
+    @Inject
+    private Event<AppConfiguration> configurationUpdateEvent;
+
+    @Inject
+    private Event<String> event;
+    
+    private final static int DEFAULT_INTERVAL = 30; // 30 seconds
     private AppConfiguration appConfiguration;
     private StaticConfiguration staticConf;
     private WebKeysConfiguration jwks;
@@ -97,6 +114,8 @@ public class ConfigurationFactory {
     private String apiClientPassword;
     private List<String> apiApprovedIssuer;
     private boolean configOauthEnabled;
+    
+    
 
     @Produces
     @ApplicationScoped
@@ -398,5 +417,15 @@ public class ConfigurationFactory {
             throw new OxIntializationException("Failed to create StringEncrypter instance", ex);
         }
     }
+    
+    public void initTimer() {
+        log.debug("Initializing Configuration Timer");
+
+        final int delay = 30;
+        final int interval = DEFAULT_INTERVAL;
+
+        timerEvent.fire(new TimerEvent(new TimerSchedule(delay, interval), new ConfigurationEvent(),
+                Scheduled.Literal.INSTANCE));
+    }  
 
 }
