@@ -30,6 +30,7 @@ public class ExternalConfigService extends ExternalScriptService {
 
     public ExternalConfigService() {
         super(CustomScriptType.CONFIG_API);
+        log.error("ExternalConfigService:::findConfigWithGEVersion() - this.customScriptConfigurations =",this.customScriptConfigurations);
     }
 
     private CustomScriptConfiguration findConfigWithGEVersion(int version) {
@@ -46,9 +47,11 @@ public class ExternalConfigService extends ExternalScriptService {
 
     public boolean checkAuthorization(HttpServletRequest request, HttpServletResponse response, ApiAppConfiguration apiAppConfiguration, String token, String issuer, String method,
             String path) {
-        log.error("External Config Authorization script params -  request:{}, response:{}, apiAppConfiguration:{}, token:{}, issuer:{}, method:{}, path:{} ", request, response, apiAppConfiguration, token, issuer, method, path);
+        log.error("External Config Authorization script params -  request:{}, response:{}, apiAppConfiguration:{}, token:{}, issuer:{}, method:{}, path:{}, this.customScriptConfigurations:{} ", request, response, apiAppConfiguration, token, issuer, method, path,this.customScriptConfigurations);
+        log.error("External Config Authorization script params - this.customScriptConfigurations.size() = "+this.customScriptConfigurations.size()+"\n");
         boolean result = true;
         for (CustomScriptConfiguration customScriptConfiguration : this.customScriptConfigurations) {
+            log.error("External Config Authorization script params - customScriptConfiguration = "+customScriptConfiguration+"\n\n");
             if (customScriptConfiguration.getExternalType().getApiVersion() > 1) {
                 ConfigApiType externalType = (ConfigApiType) customScriptConfiguration.getExternalType();            
                 ConfigAuthContext context = new ConfigAuthContext(request, response, apiAppConfiguration, token, issuer, method, path, customScriptConfiguration);

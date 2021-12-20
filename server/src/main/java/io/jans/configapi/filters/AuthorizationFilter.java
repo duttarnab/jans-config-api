@@ -80,7 +80,7 @@ public class AuthorizationFilter implements ContainerRequestFilter {
         String authorizationHeader = context.getHeaderString(HttpHeaders.AUTHORIZATION);
         String issuer = context.getHeaderString(ApiConstants.ISSUER);
         boolean configOauthEnabled = authorizationService.isConfigOauthEnabled();
-        log.info("\n\n\n AuthorizationFilter::filter() - authorizationHeader = " + authorizationHeader + " , issuer = "
+        log.error("\n\n\n AuthorizationFilter::filter() - authorizationHeader = " + authorizationHeader + " , issuer = "
                 + issuer + " , configOauthEnabled = " + configOauthEnabled + "\n\n\n");
 
         if (!configOauthEnabled) {
