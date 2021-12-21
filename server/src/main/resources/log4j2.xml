@@ -6,7 +6,7 @@
             <PatternLayout pattern="%d{dd-MM HH:mm:ss.SSS} %-5p [%t] [%C{6}] (%F:%L) - %m%n" />
         </Console>
 
-        <RollingFile name="FILE" fileName="${sys:log.base}/logs/jans-configapi.log" filePattern="${sys:log.base}/logs/jans-configapi-%d{yyyy-MM-dd}-%i.log">
+        <RollingFile name="FILE" fileName="D:/logs/jans-configapi.log" filePattern="D:/logs/jans-configapi-%d{yyyy-MM-dd}-%i.log">
             <PatternLayout pattern="%d{dd-MM HH:mm:ss.SSS} %-5p [%t] %C{4} %F:%L- %m%n" />
 
             <Policies>
@@ -15,7 +15,7 @@
             <DefaultRolloverStrategy max="30" />
         </RollingFile>
 
-		<RollingFile name="JANS_CONFIG_PERSISTENCE_FILE" fileName="${sys:log.base}/logs/jans-configapi_persistence.log" filePattern="${sys:log.base}/logs/jans-configapi_persistence-%d{yyyy-MM-dd}-%i.log">
+		<RollingFile name="JANS_CONFIG_PERSISTENCE_FILE" fileName="D:/logs/jans-configapi_persistence.log" filePattern="D:/logs/jans-configapi_persistence-%d{yyyy-MM-dd}-%i.log">
 			<PatternLayout pattern="%d %-5p [%t] [%C{6}] (%F:%L) - %m%n" />
 
 			<Policies>
@@ -25,7 +25,7 @@
 			<DefaultRolloverStrategy max="30" />
 		</RollingFile>
 
-		<RollingFile name="JANS_CONFIG_PERSISTENCE_DURATION_FILE" fileName="${sys:log.base}/logs/jans-configapi_persistence_duration.log" filePattern="${sys:log.base}/logs/jans-configapi_persistence_duration-%d{yyyy-MM-dd}-%i.log">
+		<RollingFile name="JANS_CONFIG_PERSISTENCE_DURATION_FILE" fileName="D:/logs/jans-configapi_persistence_duration.log" filePattern="D:/logs/jans-configapi_persistence_duration-%d{yyyy-MM-dd}-%i.log">
 			<PatternLayout pattern="%d %-5p [%t] [%C{6}] (%F:%L) - %m%n" />
 
 			<Policies>
@@ -35,7 +35,7 @@
 			<DefaultRolloverStrategy max="30" />
 		</RollingFile>
 
-		<RollingFile name="JANS_CONFIG_PERSISTENCE_LDAP_STATISTICS_FILE" fileName="${sys:log.base}/logs/jans-configapi_persistence_ldap_statistics.log" filePattern="${sys:log.base}/logs/jans-configapi_persistence_ldap_statistics-%d{yyyy-MM-dd}-%i.log">
+		<RollingFile name="JANS_CONFIG_PERSISTENCE_LDAP_STATISTICS_FILE" fileName="D:/logs/jans-configapi_persistence_ldap_statistics.log" filePattern="D:/logs/jans-configapi_persistence_ldap_statistics-%d{yyyy-MM-dd}-%i.log">
 			<PatternLayout pattern="%d %-5p [%t] [%C{6}] (%F:%L) - %m%n" />
 
 			<Policies>
@@ -45,7 +45,7 @@
 			<DefaultRolloverStrategy max="30" />
 		</RollingFile>
 
-		<RollingFile name="JANS_CONFIG_SCRIPT_LOG_FILE" fileName="${sys:log.base}/logs/jans-configapi_script.log" filePattern="${sys:log.base}/logs/jans-configapi_script-%d{yyyy-MM-dd}-%i.log">
+		<RollingFile name="JANS_CONFIG_SCRIPT_LOG_FILE" fileName="D:/logs/jans-configapi_script.log" filePattern="D:/logs/jans-configapi_script-%d{yyyy-MM-dd}-%i.log">
 			<PatternLayout pattern="%d %-5p [%t] [%C{6}] (%F:%L) - %m%n" />
 
 			<Policies>
@@ -62,7 +62,12 @@
  	
 	 <Loggers>
 	 
-        <Logger name="io.jans.configapi" level="${log4j.default.log.level}">
+        <Logger name="io.jans.configapi" level="DEBUG">
+            <AppenderRef ref="FILE" />
+        </Logger>
+		
+		
+        <Logger name="io.jans" level="DEBUG">
             <AppenderRef ref="FILE" />
         </Logger>
 

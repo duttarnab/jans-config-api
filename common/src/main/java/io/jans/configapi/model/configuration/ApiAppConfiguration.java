@@ -10,7 +10,6 @@ import java.util.List;
 public class ApiAppConfiguration implements Configuration {
 
     private boolean configOauthEnabled;
-    private boolean configInterceptionEnabled;
     private List<String> apiApprovedIssuer;
     private String apiProtectionType;
     private String apiClientId;
@@ -40,14 +39,6 @@ public class ApiAppConfiguration implements Configuration {
 
     public void setConfigOauthEnabled(boolean configOauthEnabled) {
         this.configOauthEnabled = configOauthEnabled;
-    }
-
-    public boolean isConfigInterceptionEnabled() {
-        return configInterceptionEnabled;
-    }
-
-    public void setConfigInterceptionEnabled(boolean configInterceptionEnabled) {
-        this.configInterceptionEnabled = configInterceptionEnabled;
     }
 
     public List<String> getApiApprovedIssuer() {
@@ -214,8 +205,8 @@ public class ApiAppConfiguration implements Configuration {
 
     @Override
     public String toString() {
-        return "ApiAppConfiguration [configOauthEnabled=" + configOauthEnabled + ", configInterceptionEnabled="
-                + configInterceptionEnabled + ", apiApprovedIssuer=" + apiApprovedIssuer + ", apiProtectionType="
+        return "ApiAppConfiguration [configOauthEnabled=" + configOauthEnabled 
+                + ", apiApprovedIssuer=" + apiApprovedIssuer + ", apiProtectionType="
                 + apiProtectionType + ", apiClientId=" + apiClientId + ", apiClientPassword=" + apiClientPassword
                 + ", endpointInjectionEnabled=" + endpointInjectionEnabled + ", authIssuerUrl=" + authIssuerUrl
                 + ", authOpenidConfigurationUrl=" + authOpenidConfigurationUrl + ", authOpenidIntrospectionUrl="

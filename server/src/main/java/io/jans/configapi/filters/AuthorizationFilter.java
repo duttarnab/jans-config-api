@@ -68,19 +68,19 @@ public class AuthorizationFilter implements ContainerRequestFilter {
 
     @SuppressWarnings({ "all" })
     public void filter(ContainerRequestContext context) {
-        log.error("=======================================================================");
-        log.error("====== context = " + context + " , info.getAbsolutePath() = " + info.getAbsolutePath()
-                + " , info.getRequestUri() = " + info.getRequestUri() + " , httpServletResponse = "+httpServletResponse+"\n\n");
-        log.error("====== info.getBaseUri()=" + info.getBaseUri() + " info.getPath()=" + info.getPath()
+        log.info("=======================================================================");
+        log.info("====== context = " + context + " , info.getAbsolutePath() = " + info.getAbsolutePath()
+                + " , info.getRequestUri() = " + info.getRequestUri() + "\n\n");
+        log.info("====== info.getBaseUri()=" + info.getBaseUri() + " info.getPath()=" + info.getPath()
                 + " info.toString()=" + info.toString());
-        log.error("====== request.getContextPath()=" + request.getContextPath() + " request.getRequestURI()="
+        log.info("====== request.getContextPath()=" + request.getContextPath() + " request.getRequestURI()="
                 + request.getRequestURI() + " request.toString() " + request.toString());
-        log.error("======" + context.getMethod() + " " + info.getPath() + " FROM IP " + request.getRemoteAddr());
-        log.error("======PERFORMING AUTHORIZATION=========================================");
+        log.info("======" + context.getMethod() + " " + info.getPath() + " FROM IP " + request.getRemoteAddr());
+        log.info("======PERFORMING AUTHORIZATION=========================================");
         String authorizationHeader = context.getHeaderString(HttpHeaders.AUTHORIZATION);
         String issuer = context.getHeaderString(ApiConstants.ISSUER);
         boolean configOauthEnabled = authorizationService.isConfigOauthEnabled();
-        log.error("\n\n\n AuthorizationFilter::filter() - authorizationHeader = " + authorizationHeader + " , issuer = "
+        log.info("\n\n\n AuthorizationFilter::filter() - authorizationHeader = " + authorizationHeader + " , issuer = "
                 + issuer + " , configOauthEnabled = " + configOauthEnabled + "\n\n\n");
 
         if (!configOauthEnabled) {
