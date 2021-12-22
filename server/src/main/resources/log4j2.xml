@@ -6,116 +6,29 @@
             <PatternLayout pattern="%d{dd-MM HH:mm:ss.SSS} %-5p [%t] [%C{6}] (%F:%L) - %m%n" />
         </Console>
 
-        <RollingFile name="FILE" fileName="D:/logs/jans-configapi.log" filePattern="D:/logs/jans-configapi-%d{yyyy-MM-dd}-%i.log">
-            <PatternLayout pattern="%d{dd-MM HH:mm:ss.SSS} %-5p [%t] %C{4} %F:%L- %m%n" />
+        <RollingFile name="FILE" fileName="${sys:log.base}/logs/configapi.log" filePattern="${sys:log.base}/logs/configapi-%d{yyyy-MM-dd}-%i.log">
+            <PatternLayout pattern="%d{dd-MM HH:mm:ss.SSS} %-5p [%t] [%C{6}] (%F:%L) - %m%n" />
 
             <Policies>
-                <SizeBasedTriggeringPolicy size="5 MB" />
+                <TimeBasedTriggeringPolicy interval="1" modulate="true" />
+                <SizeBasedTriggeringPolicy size="250 MB" />
             </Policies>
-            <DefaultRolloverStrategy max="30" />
+
+            <DefaultRolloverStrategy max="15" />
         </RollingFile>
-
-		<RollingFile name="JANS_CONFIG_PERSISTENCE_FILE" fileName="D:/logs/jans-configapi_persistence.log" filePattern="D:/logs/jans-configapi_persistence-%d{yyyy-MM-dd}-%i.log">
-			<PatternLayout pattern="%d %-5p [%t] [%C{6}] (%F:%L) - %m%n" />
-
-			<Policies>
-				<TimeBasedTriggeringPolicy interval="1" modulate="true" />
-				<SizeBasedTriggeringPolicy size="5 MB" />
-			</Policies>
-			<DefaultRolloverStrategy max="30" />
-		</RollingFile>
-
-		<RollingFile name="JANS_CONFIG_PERSISTENCE_DURATION_FILE" fileName="D:/logs/jans-configapi_persistence_duration.log" filePattern="D:/logs/jans-configapi_persistence_duration-%d{yyyy-MM-dd}-%i.log">
-			<PatternLayout pattern="%d %-5p [%t] [%C{6}] (%F:%L) - %m%n" />
-
-			<Policies>
-				<TimeBasedTriggeringPolicy interval="1" modulate="true" />
-				<SizeBasedTriggeringPolicy size="5 MB" />
-			</Policies>
-			<DefaultRolloverStrategy max="30" />
-		</RollingFile>
-
-		<RollingFile name="JANS_CONFIG_PERSISTENCE_LDAP_STATISTICS_FILE" fileName="D:/logs/jans-configapi_persistence_ldap_statistics.log" filePattern="D:/logs/jans-configapi_persistence_ldap_statistics-%d{yyyy-MM-dd}-%i.log">
-			<PatternLayout pattern="%d %-5p [%t] [%C{6}] (%F:%L) - %m%n" />
-
-			<Policies>
-				<TimeBasedTriggeringPolicy interval="1" modulate="true" />
-				<SizeBasedTriggeringPolicy size="5 MB" />
-			</Policies>
-			<DefaultRolloverStrategy max="30" />
-		</RollingFile>
-
-		<RollingFile name="JANS_CONFIG_SCRIPT_LOG_FILE" fileName="D:/logs/jans-configapi_script.log" filePattern="D:/logs/jans-configapi_script-%d{yyyy-MM-dd}-%i.log">
-			<PatternLayout pattern="%d %-5p [%t] [%C{6}] (%F:%L) - %m%n" />
-
-			<Policies>
-				<TimeBasedTriggeringPolicy interval="1" modulate="true" />
-				<SizeBasedTriggeringPolicy size="5 MB" />
-			</Policies>
-			<DefaultRolloverStrategy max="30" />
-		</RollingFile>
-		
 
 		
     </Appenders>
 
- 	
-	 <Loggers>
-	 
+    <Loggers>
+		<!-- ############### Jans ################# -->
+		<Logger name="io.jans." level="DEBUG" />
+
         <Logger name="io.jans.configapi" level="DEBUG">
             <AppenderRef ref="FILE" />
         </Logger>
-		
-		
-        <Logger name="io.jans" level="DEBUG">
-            <AppenderRef ref="FILE" />
-        </Logger>
 
-
-		<Logger name="io.jans.orm" level="${log4j.default.log.level}" additivity="false">
-			<AppenderRef ref="JANS_CONFIG_PERSISTENCE_FILE" />
-		</Logger>
-
-		<Logger name="com.unboundid.ldap.sdk.LDAPConnection" level="${log4j.default.log.level}" additivity="false">
-			<AppenderRef ref="JANS_CONFIG_PERSISTENCE_FILE" />
-		</Logger>
-		<logger name="com.couchbase.client" level="${log4j.default.log.level}" additivity="false">
-			<AppenderRef ref="JANS_CONFIG_PERSISTENCE_FILE" />
-		</logger>
-
-		<Logger name="io.jans.orm.ldap.operation.watch" level="${log4j.default.log.level}" additivity="false">
-			<AppenderRef ref="JANS_CONFIG_PERSISTENCE_DURATION_FILE" />
-		</Logger>
-
-		<Logger name="io.jans.orm.couchbase.operation.watch" level="${log4j.default.log.level}" additivity="false">
-			<AppenderRef ref="JANS_CONFIG_PERSISTENCE_DURATION_FILE" />
-		</Logger>
-
-		<Logger name="io.jans.orm.watch" level="${log4j.default.log.level}" additivity="false">
-			<AppenderRef ref="JANS_CONFIG_PERSISTENCE_DURATION_FILE" />
-		</Logger>
-
-		<Logger name="io.jans.as.server.service.status.ldap" level="${log4j.default.log.level}" additivity="false">
-			<AppenderRef ref="JANS_CONFIG_PERSISTENCE_LDAP_STATISTICS_FILE" />
-		</Logger>
-
-		<Logger name="io.jans.service.PythonService" level="${log4j.default.log.level}" additivity="false">
-			<AppenderRef ref="JANS_CONFIG_SCRIPT_LOG_FILE" />
-		</Logger>
-
-		<Logger name="io.jans.service.custom.script" level="${log4j.default.log.level}" additivity="false">
-			<AppenderRef ref="JANS_CONFIG_SCRIPT_LOG_FILE" />
-		</Logger>
-
-		<Logger name="io.jans.as.server.service.custom" level="${log4j.default.log.level}" additivity="false">
-			<AppenderRef ref="JANS_CONFIG_SCRIPT_LOG_FILE" />
-		</Logger>
-		
-		<logger name="io.jans.service.external" level="${log4j.default.log.level}" additivity="false">
-			<AppenderRef ref="JANS_CONFIG_SCRIPT_LOG_FILE" />
-		</logger>
-
-		<Root level="debug">
+        <Root level="INFO">
 			<AppenderRef ref="FILE" />
 			<AppenderRef ref="STDOUT" />
         </Root>
