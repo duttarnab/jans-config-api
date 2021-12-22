@@ -102,12 +102,16 @@
 		<Logger name="io.jans.service.custom.script" level="${log4j.default.log.level}" additivity="false">
 			<AppenderRef ref="JANS_CONFIG_SCRIPT_LOG_FILE" />
 		</Logger>
-
+		
 		<Logger name="io.jans.as.server.service.custom" level="${log4j.default.log.level}" additivity="false">
 			<AppenderRef ref="JANS_CONFIG_SCRIPT_LOG_FILE" />
 		</Logger>
 		
 		<logger name="io.jans.service.external" level="${log4j.default.log.level}" additivity="false">
+			<AppenderRef ref="JANS_CONFIG_SCRIPT_LOG_FILE" />
+		</logger>
+		
+		<logger name="io.jans.model.custom.script" level="${log4j.default.log.level}" additivity="false">
 			<AppenderRef ref="JANS_CONFIG_SCRIPT_LOG_FILE" />
 		</logger>
 
