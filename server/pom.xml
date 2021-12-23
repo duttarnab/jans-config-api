@@ -55,6 +55,13 @@
 			<artifactId>jans-core-timer-weld</artifactId>
 		</dependency>
 
+		<!-- Jython -->
+		<dependency>
+			<groupId>org.gluufederation</groupId>
+			<artifactId>jython-standalone</artifactId>
+		</dependency>
+
+
 		<!-- Weld -->
 		<dependency>
 			<groupId>javax.enterprise</groupId>

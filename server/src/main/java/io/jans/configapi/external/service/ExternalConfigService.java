@@ -52,7 +52,7 @@ public class ExternalConfigService extends ExternalScriptService {
         boolean result = true;
         for (CustomScriptConfiguration customScriptConfiguration : this.customScriptConfigurations) {
             log.error("External Config Authorization script params - customScriptConfiguration = "+customScriptConfiguration+"\n\n");
-            if (customScriptConfiguration.getExternalType().getApiVersion() > 1) {
+            if (customScriptConfiguration.getExternalType().getApiVersion() > 0) {
                 ConfigApiType externalType = (ConfigApiType) customScriptConfiguration.getExternalType();            
                 ConfigAuthContext context = new ConfigAuthContext(request, response, apiAppConfiguration, token, issuer, method, path, customScriptConfiguration);
                 result &= externalType.authorize(context);

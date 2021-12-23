@@ -17,6 +17,7 @@ import io.jans.model.custom.script.CustomScriptType;
 import io.jans.orm.PersistenceEntryManager;
 import io.jans.orm.PersistenceEntryManagerFactory;
 import io.jans.orm.service.PersistanceFactoryService;
+import io.jans.service.PythonService;
 import io.jans.service.cdi.event.LdapConfigurationReload;
 import io.jans.service.cdi.util.CdiUtil;
 import io.jans.service.custom.script.CustomScriptManager;
@@ -69,7 +70,7 @@ public class AppInitializer {
 
     @Inject
     private Instance<AuthorizationService> authorizationServiceInstance;
-    
+
     @Inject
     private LoggerService loggerService;
 
@@ -79,30 +80,38 @@ public class AppInitializer {
     @Inject
     private CustomScriptManager customScriptManager;
 
+    @Inject
+    private PythonService pythonService;
+
     public void onStart(@Observes @Initialized(ApplicationScoped.class) Object init) {
-        log.info("========================== Initializing - App =======================================");
         log.info("=============  STARTING API APPLICATION  ========================");
-        
+
+        //Resteasy config - Turn off the default patch filter
         System.setProperty(ResteasyContextParameters.RESTEASY_PATCH_FILTER_DISABLED, "true");
-        this.configurationFactory.create();
-        persistenceEntryManagerInstance.get();
-        this.createAuthorizationService();
-
-        // Start timer
-        initSchedulerService();
-
         ResteasyProviderFactory instance = ResteasyProviderFactory.getInstance();
         RegisterBuiltin.register(instance);
         instance.registerProvider(ResteasyJackson2Provider.class);
-
-        // CustomScript
-        initCustomScripts();
         
+        //configuration
+        this.configurationFactory.create();
+        persistenceEntryManagerInstance.get();
+        this.createAuthorizationService();
+        
+        // Initialize python interpreter
+        pythonService
+                .initPythonInterpreter(configurationFactory.getBaseConfiguration().getString("pythonModulesDir", null));
+        
+        // Initialize custom Script
+        initCustomScripts();
+               
+        // Start timer
+        initSchedulerService();
+
+        // Schedule timer tasks
         configurationFactory.initTimer();
         loggerService.initTimer();
 
         log.info("==============  APPLICATION IS UP AND RUNNING ===================");
-        log.info("========================== App - Initialized =======================================");
     }
 
     public void destroy(@Observes @BeforeDestroyed(ApplicationScoped.class) ServletContext init) {
@@ -173,7 +182,6 @@ public class AppInitializer {
     }
 
     protected void initSchedulerService() {
-        log.info("\n\n initSchedulerService() - Entry \n\n");
         quartzSchedulerManager.start();
 
         String disableScheduler = System.getProperties().getProperty("gluu.disable.scheduler");
@@ -184,7 +192,6 @@ public class AppInitializer {
     }
 
     private void initCustomScripts() {
-        log.info("\n\n initCustomScripts() - Entry \n\n");
         List<CustomScriptType> supportedCustomScriptTypes = new ArrayList<>();
         supportedCustomScriptTypes.add(CustomScriptType.CONFIG_API);
         customScriptManager
