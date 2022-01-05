@@ -38,6 +38,7 @@ tags:
   - name: Admin UI - Role
   - name: Admin UI - Permission
   - name: Admin UI - Role-Permissions Mapping
+  - name: Admin UI - License
 paths:
   /jans-config-api/api/v1/jans-auth-server/config:
     get:
@@ -451,7 +452,7 @@ paths:
     parameters: []
   /jans-config-api/api/v1/config/database/ldap/{name}:
     parameters:
-      - name: name
+      - name: configId
         in: path
         required: true
         description: Name of LDAP configuration.
@@ -2829,7 +2830,7 @@ paths:
       description: Get all admin ui roles.
       operationId: get-adminui-roles
       security:
-        - oauth2: [https://jans.io/adminui/user/role.read]
+        - oauth2: [https://jans.io/oauth/jans-auth-server/config/adminui/user/role.read]
       responses:
         '200':
           description: OK
@@ -2854,7 +2855,7 @@ paths:
       description: Add admin ui role.
       operationId: add-adminui-role
       security:
-        - oauth2: [https://jans.io/adminui/user/role.write]
+        - oauth2: [https://jans.io/oauth/jans-auth-server/config/adminui/user/role.write]
       requestBody:
         content:
           application/json:
@@ -2879,22 +2880,14 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /jans-config-api/admin-ui/user/roles/{role}:
     put:
       tags:
         - Admin UI - Role
       summary: Edit admin ui role.
       description: Edit admin ui role.
       operationId: edit-adminui-role
-      parameters:
-        - in: path
-          name: role
-          schema:
-            type: string
-          required: true
-          description: role name
       security:
-        - oauth2: [https://jans.io/adminui/user/role.write]
+        - oauth2: [https://jans.io/oauth/jans-auth-server/config/adminui/user/role.write]
       requestBody:
         content:
           application/json:
@@ -2923,15 +2916,13 @@ paths:
       summary: Delete admin ui role.
       description: Delete admin ui role.
       operationId: delete-adminui-role
-      parameters:
-        - in: path
-          name: role
-          schema:
-            type: string
-          required: true
-          description: role name
       security:
-        - oauth2: [https://jans.io/adminui/user/role.write]
+        - oauth2: [https://jans.io/oauth/jans-auth-server/config/adminui/user/role.write]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminRole'
       responses:
         '200':
           description: OK
@@ -2957,7 +2948,7 @@ paths:
       description: Get admin ui permissions.
       operationId: get-adminui-permissions
       security:
-        - oauth2: [https://jans.io/adminui/user/permission.read]
+        - oauth2: [https://jans.io/oauth/jans-auth-server/config/adminui/user/permission.read]
       responses:
         '200':
           description: OK
@@ -2982,7 +2973,7 @@ paths:
       description: Add admin ui permission.
       operationId: add-adminui-permission
       security:
-        - oauth2: [https://jans.io/adminui/user/permission.write]
+        - oauth2: [https://jans.io/oauth/jans-auth-server/config/adminui/user/permission.write]
       requestBody:
         content:
           application/json:
@@ -3007,22 +2998,14 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /jans-config-api/admin-ui/user/permissions/{permission}:
     put:
       tags:
         - Admin UI - Permission
       summary: Edit admin ui permission.
       description: Edit admin ui permission.
       operationId: edit-adminui-permission
-      parameters:
-        - in: path
-          name: permission
-          schema:
-            type: string
-          required: true
-          description: permission name
       security:
-        - oauth2: [https://jans.io/adminui/user/permission.write]
+        - oauth2: [https://jans.io/oauth/jans-auth-server/config/adminui/user/permission.write]
       requestBody:
         content:
           application/json:
@@ -3051,15 +3034,13 @@ paths:
       summary: Delete admin ui permission.
       description: Delete admin ui permission.
       operationId: delete-adminui-permission
-      parameters:
-        - in: path
-          name: permission
-          schema:
-            type: string
-          required: true
-          description: permission name
       security:
-        - oauth2: [https://jans.io/adminui/user/permission.write]
+        - oauth2: [https://jans.io/oauth/jans-auth-server/config/adminui/user/permission.write]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminPermission'
       responses:
         '200':
           description: OK
@@ -3085,7 +3066,7 @@ paths:
       description: Get admin ui role-permissions mapping.
       operationId: get-adminui-role-permissions
       security:
-        - oauth2: [https://jans.io/adminui/user/rolePermissionMapping.read]
+        - oauth2: [https://jans.io/oauth/jans-auth-server/config/adminui/user/rolePermissionMapping.read]
       responses:
         '200':
           description: OK
@@ -3110,7 +3091,7 @@ paths:
       description: Map permissions to role.
       operationId: map-permissions-to-role
       security:
-        - oauth2: [https://jans.io/adminui/user/rolePermissionMapping.write]
+        - oauth2: [https://jans.io/oauth/jans-auth-server/config/adminui/user/rolePermissionMapping.write]
       requestBody:
         content:
           application/json:
@@ -3140,7 +3121,7 @@ paths:
       description: Remove role-permissions mapping.
       operationId: remove-role-permissions-permission
       security:
-        - oauth2: [https://jans.io/adminui/user/rolePermissionMapping.write]
+        - oauth2: [https://jans.io/oauth/jans-auth-server/config/adminui/user/rolePermissionMapping.write]
       requestBody:
         content:
           application/json:
@@ -3157,6 +3138,60 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/RolePermissionMapping'
+        '400':
+          $ref: '#/components/responses/NotAcceptable'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /jans-config-api/admin-ui/license/licenseDetails:
+    get:
+      tags:
+        - Admin UI - License
+      summary: Get admin ui license details.
+      description: Get admin ui license details.
+      operationId: get-adminui-license
+      security:
+        - oauth2: [https://jans.io/oauth/jans-auth-server/config/adminui/license.read]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                title: Get admin ui license details.
+                description: Get admin ui license details.
+                $ref: '#/components/schemas/LicenseResponse'
+        '400':
+          $ref: '#/components/responses/NotAcceptable'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags:
+        - Admin UI - License
+      summary: Edit admin ui license details.
+      description: Edit admin ui license details.
+      operationId: edit-adminui-role
+      security:
+        - oauth2: [https://jans.io/oauth/jans-auth-server/config/adminui/license.write]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              required:
+                - role
+              $ref: '#/components/schemas/LicenseRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                title: Edit admin ui license details.
+                description: Edit admin ui license details.
+                $ref: '#/components/schemas/LicenseResponse'
         '400':
           $ref: '#/components/responses/NotAcceptable'
         '401':
@@ -4905,8 +4940,8 @@ components:
           description: XRI i-number. Client Identifier to uniquely identify the client.
           type: string
         displayName:
-            type: string
-            description: Name of the user suitable for display to end-users
+          type: string
+          description: Name of the user suitable for display to end-users
         clientSecret:
           type: string
           description: The client secret.  The client MAY omit the parameter if the client secret is an empty string.
@@ -6221,16 +6256,16 @@ components:
 
     ScimPatchOperation:
       required:
-      - op
+        - op
       type: object
       properties:
         op:
           type: string
           description: The kind of operation to perform
           enum:
-          - add
-          - remove
-          - replace
+            - add
+            - remove
+            - replace
         path:
           type: string
           description: Required when op is remove, optional otherwise
@@ -6242,7 +6277,7 @@ components:
     ScimPatchRequest:
       description: Stores one or more patch operations
       required:
-      - operations
+        - operations
       type: object
       properties:
         schemas:
@@ -6266,6 +6301,8 @@ components:
     AdminRole:
       type: object
       description: Admin role
+      required:
+        - role
       properties:
         role:
           type: string
@@ -6276,6 +6313,8 @@ components:
     AdminPermission:
       type: object
       description: Admin permission
+      required:
+        - permission
       properties:
         permission:
           type: string
@@ -6286,6 +6325,8 @@ components:
     RolePermissionMapping:
       type: object
       description: Admin role-permission mapping
+      required:
+        - role
       properties:
         role:
           type: string
@@ -6295,4 +6336,58 @@ components:
           items:
             type: string
           description: permissions
-
+    LicenseRequest:
+      type: object
+      description: Admin license request
+      required:
+        - validityPeriod
+      properties:
+        validityPeriod:
+          type: string
+          description: The license will expire on following date.
+        maxActivations:
+          type: string
+          description: The maximum allowed activations of this license on different machines.
+        licenseActive:
+          type: string
+          description: Is license active?
+    LicenseResponse:
+      type: object
+      description: Admin license response
+      properties:
+        isLicenseEnable:
+          type: boolean
+          description: Is license module enabled in admin-ui application?
+        productName:
+          type: string
+          description: The license is registered under following product.
+        productCode:
+          type: string
+          description: The short code is used in our API calls in order to identify the product.
+        licenseType:
+          type: string
+          description: The type of license (eg Perpetual, Time-based, Subscription, and Consumption-based licenses).
+        maxActivations:
+          type: integer
+          description: The license key.
+        licenseKey:
+          type: string
+          description: The license key.
+        isLicenseActive:
+          type: boolean
+          description: Is license active?
+        validityPeriod:
+          type: string
+          description: The license validity period
+        companyName:
+          type: string
+          description: The company name of the registered license.
+        customerEmail:
+          type: string
+          description: The customer email address of the registered license.
+        customerFirstName:
+          type: string
+          description: The customer first name.
+        customerLastName:
+          type: string
+          description: The customer last name.
