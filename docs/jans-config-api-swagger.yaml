@@ -6356,7 +6356,7 @@ components:
       description: Admin license response
       properties:
         isLicenseEnable:
-          type: boolean
+          type: string
           description: Is license module enabled in admin-ui application?
           default: false
         productName:
@@ -6375,7 +6375,7 @@ components:
           type: string
           description: The license key.
         isLicenseActive:
-          type: boolean
+          type: string
           description: Is license active?
           default: false
         validityPeriod:
